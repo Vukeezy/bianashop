@@ -1,0 +1,123 @@
+<div id="overlay" (click)="overlayOff()">
+  <div class="success-animation" style="margin-top: 12%;margin-bottom: 2%;">
+    <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="25" r="25" fill="none" /><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" /></svg>
+  </div>
+  
+  <div class="row">
+    <div class="col-4"></div>
+    <div class="col-6">
+      <h2 style="color: white;">Uspešno ste dodali proizvod u Vašu korpu!</h2>
+    </div>
+    <div class="col-2"></div>
+  </div>
+  <div class="row">
+    <div class="col-5"></div>
+    <div class="col-3" style="margin-left: 3%; margin-top:1%">
+      <button type="button" (click)="this.router.navigateByUrl('/shop');" class="btn btn-secondary success-button">Nastavi kupovinu <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag" viewBox="0 0 16 16">
+        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"/>
+      </svg> </button>
+    </div>
+    <div class="col-4"></div>
+  </div>
+</div>
+<div class="row bg-color fade-in" *ngIf="this.product" >
+    <h2 class="ms-5 mt-4" style="margin-left: 13% !important; text-decoration: underline;">{{this.product.name}}</h2>
+    <div class="col-8 mt-4" style="margin-left: 10% !important;">
+            <div class="row">
+              <div class="col-md-6 mb-4 mb-md-0">
+          
+                <div id="mdb-lightbox-ui"></div>
+          
+                <div class="mdb-lightbox">
+          
+                  <div class="row product-gallery mx-1">
+          
+                    <div class="col-10 ms-5">
+                      <figure class="view overlay rounded z-depth-1 main-img">
+                          <img [src]="this.showedPicture"
+                            class="img-fluid z-depth-1">
+                      </figure>
+                      
+                      </div>
+                    </div>
+          
+                </div>
+                <div class="col-12 ms-5">
+                  <div class="row">
+                    <div class="col-3 picture" *ngFor="let picture of this.product.pictures" (click)="this.pictureChanged(picture)" >
+                      <a>
+                        <figure class="view overlay rounded z-depth-1 main-img">
+                          <img [src]="this.picture"
+                          class="img-fluid">
+                        </figure>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-6">
+          
+                <h4>{{this.product.name}}</h4>
+                <p class="mb-2 text-muted text-uppercase small">Zavesa</p>
+                
+                <p><span class="mr-1"><strong><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cash" viewBox="0 0 16 16">
+                  <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                  <path d="M0 4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V4zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V6a2 2 0 0 1-2-2H3z"/>
+                </svg> {{this.product.price}},00 rsd/m</strong></span></p>
+                <p class="pt-1">{{this.product.description}}</p>
+                <div class="table-responsive">
+                  <table class="table table-sm table-borderless mb-0">
+                    <tbody>
+                      <tr>
+                        <th class="pl-0 w-25" scope="row"><strong><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-upc" viewBox="0 0 16 16">
+                          <path d="M3 4.5a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-7zm3 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7z"/>
+                        </svg> Šifra</strong></th>
+                        <td>{{this.product.itemCode}}</td>
+                      </tr>
+                      <tr>
+                        <th class="pl-0 w-25" scope="row"><strong><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-truck" viewBox="0 0 16 16">
+                          <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5v-7zm1.294 7.456A1.999 1.999 0 0 1 4.732 11h5.536a2.01 2.01 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456zM12 10a2 2 0 0 1 1.732 1h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12v4zm-9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+                        </svg> Dostava </strong></th>
+                        <td>Srbija </td>
+                      </tr>
+                      <tr>
+                        <th class="pl-0 w-25" scope="row"><strong><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-expand" viewBox="0 0 16 16">
+                          <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/>
+                        </svg> Visina</strong></th>
+                        <td>{{this.product.height}}m</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <hr>
+                <div class="row">
+                  <div class="col-2 mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-bar-right" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M6 8a.5.5 0 0 0 .5.5h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L12.293 7.5H6.5A.5.5 0 0 0 6 8zm-2.5 7a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 1 0v13a.5.5 0 0 1-.5.5z"/>
+                    </svg> <b>Dužina:</b> 
+                  </div>
+                  <div class="col-2 ms-4">
+                    <input class="form-control" style="text-align: center;" step="0.5" min=1 value="1" type="number" (input)="onLengthChange($event)"> 
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-9 mt-4">
+                    <h4>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tag-fill" viewBox="0 0 16 16">
+                      <path d="M2 1a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l4.586-4.586a1 1 0 0 0 0-1.414l-7-7A1 1 0 0 0 6.586 1H2zm4 3.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                    </svg> Ukupna cena: {{this.currentPrice}},00 rsd </h4>
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <div class="col-8">
+                  </div>
+                  <div class="col-4">
+                    <button type="button" style="color: white;" (click)="addProduct()" class="btn btn-secondary">Dodaj u korpu <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag" viewBox="0 0 16 16">
+                      <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"/>
+                    </svg> </button>
+                </div>
+              </div>
+    </div>
+</div>
+

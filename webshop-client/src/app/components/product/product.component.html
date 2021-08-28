@@ -1,0 +1,23 @@
+<div class="d-flex justify-content-center container fade-in">
+    <div class="card p-3 bg-white" (click)="onDetailsClicked()"><i class="fa fa-apple"></i>
+        <div class="about-product text-center mt-2"><img [src]="this.product.mainPicture" width="320">
+            <div>
+                <h4>{{this.product.name}}</h4>
+                <h6 class="mt-0 text-black-50">{{this.product.itemCode}}</h6>
+            </div>
+        </div>
+        <div class="stats mt-2">
+            <div class="d-flex justify-content-between p-price"><span>Visina: </span><span>{{this.product.height}}m</span></div>
+            <div class="d-flex justify-content-between p-price"><span>Materijal: </span><span>Pamuk</span></div>
+            <div class="d-flex justify-content-between p-price"><span>Cena: </span><span>{{this.product.price}},00 rsd/m</span></div>
+        </div>
+        <div class="text-center mt-2">
+            <button type="button" style="padding-left: 10%;padding-right: 10%;" (click)="onDetailsClicked()" class="btn btn-secondary">Kupi  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag" viewBox="0 0 16 16">
+                <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"/>
+              </svg></button>
+        </div>
+    </div>
+    
+
+
+</div>

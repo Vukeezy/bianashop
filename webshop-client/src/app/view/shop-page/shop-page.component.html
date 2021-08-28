@@ -1,0 +1,35 @@
+<div  class="row bg-color pb-5 fade-in">
+    <div class="col-3">
+
+    </div>
+    <div class="col-8 mr-3 bg-color">  
+        <h2 class="col-9 ms-4 mt-4" style="text-decoration: underline;">Naši proizvodi: Zavese</h2>
+
+        <div class="row mt-4">
+            <div class="col-1 ms-4 mt-1"><h4>Sortiraj:</h4></div>
+            <div class="col-2">
+                <select class="form-control" value="this.sortSelection" (change)="selectionChanged($event)">
+                    <option value="name asc">Po nazivu rastuće</option>
+                    <option value="name desc">Po nazivu opadajuće </option>
+                    <option value="price asc">Po ceni rastuće</option>
+                    <option value="price desc">Po ceni opadajuće</option>
+                    <option value="height asc">Po visini rastuće</option>
+                    <option value="height desc">Po visini opadajuće</option>
+                </select>
+            </div>
+            <div class="col-8 ms-5">
+                <div class="row">
+                    <div class="col-8"></div>
+                    <div class="col-4">
+                        <input type="text" placeholder="Pretražite artikle..." class="form-control">
+                    </div>
+                </div>
+            </div>            
+        </div>
+        <div class="row">
+            <div class="col-4 mr-2 mt-3" *ngFor="let product of this.products" >
+                <app-product [product]="this.product" (detailsClicked)="this.getDetails($event)"></app-product>
+            </div>
+        </div>
+    </div>
+</div>

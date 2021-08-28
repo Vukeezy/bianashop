@@ -1,0 +1,107 @@
+<div id="overlay" (click)="overlayOff()">
+    <div class="success-animation" style="margin-top: 12%;margin-bottom: 2%;">
+      <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="25" r="25" fill="none" /><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" /></svg>
+    </div>
+    
+    <div class="row">
+      <div class="col-4"></div>
+      <div class="col-4">
+        <h2 style="color: white;text-align: center;">Poštovani {{this.formData.value['fullName']}}, Vaša porudžbina je zavedena pod brojem {{this.orderNumber}} i možete je očekivati u roku od 5 radnih dana!</h2>
+      </div>
+      <div class="col-4"></div>
+    </div>
+    <div class="row pt-4">
+        <div class="col-4"></div>
+        <div class="col-6">
+            <h5 style="color: rgb(192, 192, 192);">Za dodatne detalje, informaciju ili korisničku pomoć obratite se na broj 060</h5>
+        </div>
+        <div class="col-2"></div>
+    </div>
+    <div class="row">
+      <div class="col-5"></div>
+      <div class="col-3" style="margin-left: 3%; margin-top:1%">
+       <!-- <button type="button" (click)="this.router.navigateByUrl('/shop');" class="btn btn-secondary success-button">Nastavi kupovinu <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag" viewBox="0 0 16 16">
+          <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"/>
+        </svg> </button>-->
+      </div>
+      <div class="col-4"></div>
+    </div>
+</div>
+<div class="bg-color pt-3 mb-5">
+    <div class="card">
+        <div class="row">
+            <div class="col-8 cart" style="max-height: 75vh; overflow: scroll;overflow-x: hidden;">
+                <div class="title">
+                    <div class="row">
+                        <div class="col">
+                            <h4><b>Korpa</b></h4>
+                        </div>
+                        <div class="col align-self-center text-right text-muted">{{this.cartItems.length}} stavke</div>
+                    </div>
+                </div>
+                <div class="row border-top border-bottom" *ngFor="let item of this.cartItems" style="max-height: 60vh;">
+                    <div class="row main align-items-center" *ngIf="item.product">
+                        <div class="col-2"><img class="img-fluid" [src]="item.product.mainPicture"></div>
+                        <div class="col-4">
+                            <div class="row text-muted">Jastuk</div>
+                            <div class="row">{{this.item.product.name}}</div>
+                        </div>
+                        <div class="col-2"><input type="number" class="form-control mt-5" step="0.5" min="1" [(ngModel)]="this.item.amount" (input)="this.calculateTotalPrice()" ></div>
+                        <div class="col-1"></div>
+                        <div class="col-2">{{this.item.product.price * this.item.amount}}.00 rsd</div>
+                        <div class="col-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" (click)="removeItem(item.id)" class="bi bi-trash cursor" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                          </svg></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                        <button class="btn btn-secondary bg-secondary text-primary" style="font-size: medium;">Povratak u prodavnicu</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4 summary">
+                <div>
+                    <h5 class="text-secondary"><b>Informacije</b></h5>
+                </div>
+                <hr style="color: #f4a950">
+                <form [formGroup]="this.formData">
+                    <p class="text-secondary">Način preuzimanja</p> 
+                    <div class="row">
+                        <div class="col-12">
+                            <select class="form-select" (change)="this.pickupChanged($event)" >
+                                <option value="1">Lično preuzimanje</option>
+                                <option value="2">Pouzecem + PPT 220,00 rsd</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="text-secondary">Informacije za dostavu:</p>
+                    <div class="row">
+                        <div class="col-6">
+                            <input class="form-control" formControlName="fullName"  placeholder="Ime i prezime">
+                        </div>
+                        <div class="col-6">
+                            <input class="form-control" formControlName="phoneNumber" placeholder="Broj telefona">
+                        </div>
+                    </div> 
+                    <div class="row">
+                        <div class="col-12">
+                            <input class="form-control" formControlName="address" placeholder="Ulica, broj, grad, poštanski broj">
+                        </div>
+                    </div> 
+                    <div class="row">
+                        <div class="col-12">
+                            <input class="form-control" formControlName="email" placeholder="Email">
+                        </div>
+                    </div> 
+
+                </form>
+                <div class="row" style="border-top: 1px solid rgba(0,0,0,.1);">
+                    <div class="col text-secondary"><h4>Ukupna cena:</h4> </div>
+                    <div class="col text-right text-secondary"><h4>{{this.totalPrice}}.00 rsd</h4></div>
+                </div> <button class="btn btn-secondary bg-secondary text-primary" style="font-size: large;" [disabled]="!this.formData.valid" (click)="sendOrder()">Završi kupovinu</button>
+            </div>
+        </div>
+    </div>
+</div>
