@@ -34,6 +34,10 @@ public class ItemService {
                 pictures.add(foundPicture);
             }
         }
+        Picture mainPic = pictureService.getByPicture(foundItem.getMainPicture().getPicture());
+        if (mainPic != null) {
+            foundItem.setMainPicture(mainPic);
+        }
         foundItem.setPictures(pictures);
         return itemRepository.save(foundItem);
     }
@@ -44,7 +48,7 @@ public class ItemService {
             return null;
         }
 
-        List<Picture> pictures = new ArrayList<>();
+        Set<Picture> pictures = new HashSet<>();
         for(Picture picture : toEntity.getPictures()) {
             Picture foundPicture = pictureService.getByPicture(picture.getPicture());
             if (foundPicture == null) {
@@ -53,7 +57,12 @@ public class ItemService {
                 pictures.add(foundPicture);
             }
         }
-        toEntity.setPictures((Set<Picture>) pictures);
+        Picture mainPic = pictureService.getByPicture(toEntity.getMainPicture().getPicture());
+        if (mainPic != null) {
+            toEntity.setMainPicture(mainPic);
+        }
+
+        toEntity.setPictures(pictures);
 
         return itemRepository.save(toEntity);
     }
@@ -125,7 +134,7 @@ public class ItemService {
     }
 
     public List<Item> search(SearchParams searchParams) {
-        return itemRepository.findByItemCodeOrNameContains(searchParams.getInput(), searchParams.getInput());
+        return itemRepository.findByItemCodeOrNameContainsIgnoreCase(searchParams.getInput(), searchParams.getInput());
     }
 
     public List<Item> filter(FilterParams filterParams, List<Item> items) {

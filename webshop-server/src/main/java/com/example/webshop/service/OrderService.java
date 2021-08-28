@@ -47,7 +47,7 @@ public class OrderService {
         Set<OrderedItem> orderedItems = new HashSet<>();
         for (Item item: foundItems) {
             OrderedItem orderedItem = new OrderedItem(item.getItemCode(), item.getName(), item.getHeight(), item.getPrice(),
-                    toEntity.getCartItemList().get(foundItems.indexOf(item)).getAmount(), (Picture) item.getPictures().toArray()[0]);
+                    toEntity.getCartItemList().get(foundItems.indexOf(item)).getAmount(), item.getMainPicture());
             orderedItem = orderedItemService.create(orderedItem);
             orderedItems.add(orderedItem);
             item.setInStock(item.getInStock() - orderedItem.getAmount());

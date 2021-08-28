@@ -14,6 +14,7 @@ public class ItemDTO {
     private SaleDTO sale;
     private int inStock;
     private List<String> pictures = new ArrayList<>();
+    private String mainPicture;
 
     public ItemDTO() {
     }
@@ -83,6 +84,31 @@ public class ItemDTO {
         this.sale = sale;
         this.inStock = inStock;
         this.pictures = pictures;
+    }
+
+    public ItemDTO(int id, String itemCode, String name, String description, double height, double price, SaleDTO sale, int inStock, List<String> pictures, String mainPicture) {
+        this.id = id;
+        this.itemCode = itemCode;
+        this.name = name;
+        this.description = description;
+        this.height = height;
+        this.price = price;
+        this.sale = sale;
+        this.inStock = inStock;
+        this.pictures = pictures;
+        this.mainPicture = mainPicture;
+    }
+
+    public ItemDTO(int id, String itemCode, String name, String description, double height, double price, int inStock, List<String> pictures, String mainPicture) {
+        this.id = id;
+        this.itemCode = itemCode;
+        this.name = name;
+        this.description = description;
+        this.height = height;
+        this.price = price;
+        this.inStock = inStock;
+        this.pictures = pictures;
+        this.mainPicture = mainPicture;
     }
 
     public int getId() {
@@ -155,5 +181,13 @@ public class ItemDTO {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getMainPicture() {
+        return mainPicture;
+    }
+
+    public void setMainPicture(String mainPicture) {
+        this.mainPicture = mainPicture;
     }
 }

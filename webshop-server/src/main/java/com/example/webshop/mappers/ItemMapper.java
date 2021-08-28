@@ -22,18 +22,18 @@ public class ItemMapper implements MapperInterface<Item, ItemDTO> {
     @Override
     public Item toEntity(ItemDTO dto) {
         if (dto.getSale() != null) {
-            return new Item(dto.getId(), dto.getItemCode(), dto.getName(), dto.getDescription(), dto.getHeight(), dto.getPrice(), dto.getInStock(), saleMapper.toEntity(dto.getSale()), (Set<Picture>) pictureMapper.toEntitySet(dto.getPictures()));
+            return new Item(dto.getId(), dto.getItemCode(), dto.getName(), dto.getDescription(), dto.getHeight(), dto.getPrice(), dto.getInStock(), saleMapper.toEntity(dto.getSale()), pictureMapper.toEntitySet(dto.getPictures()), pictureMapper.toEntity(dto.getMainPicture()));
         }
-        return new Item(dto.getId(), dto.getItemCode(), dto.getName(), dto.getDescription(), dto.getHeight(), dto.getPrice(), dto.getInStock(), (Set<Picture>) pictureMapper.toEntitySet(dto.getPictures()));
+        return new Item(dto.getId(), dto.getItemCode(), dto.getName(), dto.getDescription(), dto.getHeight(), dto.getPrice(), dto.getInStock(), pictureMapper.toEntitySet(dto.getPictures()), pictureMapper.toEntity(dto.getMainPicture()));
 
     }
 
     @Override
     public ItemDTO toDTO(Item entity) {
         if (entity.getSale() != null) {
-            return new ItemDTO(entity.getId(), entity.getItemCode(), entity.getName(), entity.getDescription(), entity.getHeight(), entity.getPrice(), saleMapper.toDTO(entity.getSale()), entity.getInStock(), pictureMapper.toDTOSet(entity.getPictures()));
+            return new ItemDTO(entity.getId(), entity.getItemCode(), entity.getName(), entity.getDescription(), entity.getHeight(), entity.getPrice(), saleMapper.toDTO(entity.getSale()), entity.getInStock(), pictureMapper.toDTOSet(entity.getPictures()), pictureMapper.toDTO(entity.getMainPicture()));
         }
-        return new ItemDTO(entity.getId(), entity.getItemCode(), entity.getName(), entity.getDescription(), entity.getHeight(), entity.getPrice(), entity.getInStock(), pictureMapper.toDTOSet(entity.getPictures()));
+        return new ItemDTO(entity.getId(), entity.getItemCode(), entity.getName(), entity.getDescription(), entity.getHeight(), entity.getPrice(), entity.getInStock(), pictureMapper.toDTOSet(entity.getPictures()), pictureMapper.toDTO(entity.getMainPicture()));
     }
 
     @Override

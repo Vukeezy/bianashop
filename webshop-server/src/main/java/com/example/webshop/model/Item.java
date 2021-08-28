@@ -38,6 +38,10 @@ public class Item {
     @JoinColumn(name = "itemId")
     private Set<Picture> pictures = new HashSet<>();
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "main_picture", referencedColumnName = "id")
+    private Picture mainPicture;
+
     public Item() {
     }
 
@@ -88,6 +92,31 @@ public class Item {
         this.price = price;
         this.inStock = inStock;
         this.pictures = pictures;
+    }
+
+    public Item(int id, String itemCode, String name, String description, double height, double price, int inStock, Set<Picture> pictures, Picture mainPicture) {
+        this.id = id;
+        this.itemCode = itemCode;
+        this.name = name;
+        this.description = description;
+        this.height = height;
+        this.price = price;
+        this.inStock = inStock;
+        this.pictures = pictures;
+        this.mainPicture = mainPicture;
+    }
+
+    public Item(int id, String itemCode, String name, String description, double height, double price, int inStock, Sale sale, Set<Picture> pictures, Picture mainPicture) {
+        this.id = id;
+        this.itemCode = itemCode;
+        this.name = name;
+        this.description = description;
+        this.height = height;
+        this.price = price;
+        this.inStock = inStock;
+        this.sale = sale;
+        this.pictures = pictures;
+        this.mainPicture = mainPicture;
     }
 
     public int getId() {
@@ -160,6 +189,14 @@ public class Item {
 
     public void setPictures(Set<Picture> pictures) {
         this.pictures = pictures;
+    }
+
+    public Picture getMainPicture() {
+        return mainPicture;
+    }
+
+    public void setMainPicture(Picture mainPicture) {
+        this.mainPicture = mainPicture;
     }
 
     @Override

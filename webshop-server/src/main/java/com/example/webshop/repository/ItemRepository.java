@@ -15,5 +15,5 @@ public interface ItemRepository extends JpaRepository<Item, Integer> {
 
     Item findBySaleId(int saleId);
 
-    List<Item> findByItemCodeOrNameContains(String input1, String input2);
+    List<Item> findByItemCodeOrNameContainsIgnoreCase(String input1, String input2);
 }
