@@ -138,8 +138,9 @@ public class ItemService {
     }
 
     public List<Item> filter(FilterParams filterParams, List<Item> items) {
+        List<Item> result = new ArrayList<Item>();
+        for(Item item:items) {
 
-        for(Item item: items) {
             boolean filteredByHeightFrom = false;
             if (filterParams.getHeightFrom() != -1 && item.getHeight() < filterParams.getHeightFrom()) {
                 filteredByHeightFrom = true;
@@ -160,10 +161,11 @@ public class ItemService {
                 filteredByPriceTo = true;
             }
 
-            if (filteredByHeightFrom || filteredByHeightTo || filteredByPriceFrom || filteredByPriceTo) {
-                items.remove(item);
+            if (!(filteredByHeightFrom || filteredByHeightTo || filteredByPriceFrom || filteredByPriceTo)) {
+                result.add(item);
             }
         }
-        return items;
+
+        return result;
     }
 }

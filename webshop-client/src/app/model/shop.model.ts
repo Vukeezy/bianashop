@@ -37,3 +37,15 @@ export interface SortParams{
     param: String,
     items: Product[]
 }   
+
+export interface SearchParams{
+    input: String;
+}
+
+export interface FilterParams{
+    items: Product[],
+    heightFrom: number,
+    heightTo: number,
+    priceFrom: number,
+    priceTo:number
+}

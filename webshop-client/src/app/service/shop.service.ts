@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import { Cart, CartItem, Product, SortParams } from '../model/shop.model';
+import { Cart, CartItem, FilterParams, Product, SearchParams, SortParams } from '../model/shop.model';
 
 @Injectable({providedIn: 'root'})
 export class ShopService {
@@ -30,8 +30,9 @@ export class ShopService {
 
   sortProducts = (sortParams: SortParams) => this.http.post<Product[]>(this.baseUrl + 'items/sort', sortParams);
 
-  searchProducts = (input: String) => this.http.post<Product[]>(this.baseUrl + 'items/search', input);
+  searchProducts = (input: SearchParams) => this.http.post<Product[]>(this.baseUrl + 'items/search', input);
 
+  filterProducts = (filterParams: FilterParams) => this.http.post<Product[]>(this.baseUrl + 'items/filter', filterParams);
 
   //getCertificates = () => this.http.get<Certificate>(this.baseUrl + 'certificate');
 

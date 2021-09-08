@@ -1,9 +1,36 @@
 <div  class="row bg-color pb-5 fade-in">
     <div class="col-3">
+        <div class="row ms-5" style="margin-top:30% !important;">
+            <h4>Cena: </h4>
+        </div>
+        <div class="row ms-5 mt-2">
+            <div class="col-6">
+                <input type="number" (input)="searchProducts()" 
+                                    [(ngModel)]="this.filterParams.priceFrom" 
 
+                                    class="form-control" />                
+            </div>
+            <div class="col-6">
+                <input type="number" (input)="searchProducts()" 
+                                     [(ngModel)]="this.filterParams.priceTo" 
+ 
+                                     class="form-control" />                
+            </div>
+        </div>
+        <div class="row ms-5 mt-5">
+            <h4>Visina: </h4>
+        </div>
+        <div class="row ms-5 mt-2">
+            <div class="col-6">
+                <input type="number" (input)="searchProducts()"  [(ngModel)]="this.filterParams.heightFrom" [min]="this.minHeight" [max]="this.filterParams.heightTo" class="form-control" />                
+            </div>
+            <div class="col-6">
+                <input type="number" (input)="searchProducts()"  [(ngModel)]="this.filterParams.heightTo" [min]="this.filterParams.heightTo" [max]="this.maxHeight" class="form-control" />                
+            </div>
+        </div>
     </div>
     <div class="col-8 mr-3 bg-color">  
-        <h2 class="col-9 ms-4 mt-4" style="text-decoration: underline;">Naši proizvodi: Zavese</h2>
+        <h2 class="col-9 ms-4 mt-4" style="text-decoration: underline;">Zavese</h2>
 
         <div class="row mt-4">
             <div class="col-1 ms-4 mt-1"><h4>Sortiraj:</h4></div>
@@ -21,7 +48,7 @@
                 <div class="row">
                     <div class="col-8"></div>
                     <div class="col-4">
-                        <input type="text" placeholder="Pretražite artikle..." class="form-control">
+                        <input type="text" [(ngModel)]="this.searchInput" placeholder="Pretraga..." class="form-control" (input)="this.searchProducts();">
                     </div>
                 </div>
             </div>            

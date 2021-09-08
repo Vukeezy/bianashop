@@ -32,7 +32,7 @@ insert into pictures (picture, item_id) values ('http://dummyimage.com/142x140.b
 insert into pictures (picture, item_id) values ('http://dummyimage.com/143x140.bmp', 10);
 
 UPDATE items SET main_picture = 1 WHERE id = 1;
-UPDATE items SET main_picture = 2 WHERE id = 2;
+UPDATE items SET main_picture = 3 WHERE id = 2;
 UPDATE items SET main_picture = 5 WHERE id = 3;
 UPDATE items SET main_picture = 6 WHERE id = 4;
 UPDATE items SET main_picture = 8 WHERE id = 5;
