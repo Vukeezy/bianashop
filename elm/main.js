@@ -15,7 +15,6 @@ function F3(fun) {
     return function(b) { return function(c) { return fun(a, b, c); }; };
   });
 }
-
 function F4(fun) {
   return F(4, fun, function(a) { return function(b) { return function(c) {
     return function(d) { return fun(a, b, c, d); }; }; };
@@ -4373,6 +4372,181 @@ function _Url_percentDecode(string)
 	{
 		return $elm$core$Maybe$Nothing;
 	}
+}
+
+
+// SEND REQUEST
+
+var _Http_toTask = F3(function(router, toTask, request)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		function done(response) {
+			callback(toTask(request.expect.a(response)));
+		}
+
+		var xhr = new XMLHttpRequest();
+		xhr.addEventListener('error', function() { done($elm$http$Http$NetworkError_); });
+		xhr.addEventListener('timeout', function() { done($elm$http$Http$Timeout_); });
+		xhr.addEventListener('load', function() { done(_Http_toResponse(request.expect.b, xhr)); });
+		$elm$core$Maybe$isJust(request.tracker) && _Http_track(router, xhr, request.tracker.a);
+
+		try {
+			xhr.open(request.method, request.url, true);
+		} catch (e) {
+			return done($elm$http$Http$BadUrl_(request.url));
+		}
+
+		_Http_configureRequest(xhr, request);
+
+		request.body.a && xhr.setRequestHeader('Content-Type', request.body.a);
+		xhr.send(request.body.b);
+
+		return function() { xhr.c = true; xhr.abort(); };
+	});
+});
+
+
+// CONFIGURE
+
+function _Http_configureRequest(xhr, request)
+{
+	for (var headers = request.headers; headers.b; headers = headers.b) // WHILE_CONS
+	{
+		xhr.setRequestHeader(headers.a.a, headers.a.b);
+	}
+	xhr.timeout = request.timeout.a || 0;
+	xhr.responseType = request.expect.d;
+	xhr.withCredentials = request.allowCookiesFromOtherDomains;
+}
+
+
+// RESPONSES
+
+function _Http_toResponse(toBody, xhr)
+{
+	return A2(
+		200 <= xhr.status && xhr.status < 300 ? $elm$http$Http$GoodStatus_ : $elm$http$Http$BadStatus_,
+		_Http_toMetadata(xhr),
+		toBody(xhr.response)
+	);
+}
+
+
+// METADATA
+
+function _Http_toMetadata(xhr)
+{
+	return {
+		url: xhr.responseURL,
+		statusCode: xhr.status,
+		statusText: xhr.statusText,
+		headers: _Http_parseHeaders(xhr.getAllResponseHeaders())
+	};
+}
+
+
+// HEADERS
+
+function _Http_parseHeaders(rawHeaders)
+{
+	if (!rawHeaders)
+	{
+		return $elm$core$Dict$empty;
+	}
+
+	var headers = $elm$core$Dict$empty;
+	var headerPairs = rawHeaders.split('\r\n');
+	for (var i = headerPairs.length; i--; )
+	{
+		var headerPair = headerPairs[i];
+		var index = headerPair.indexOf(': ');
+		if (index > 0)
+		{
+			var key = headerPair.substring(0, index);
+			var value = headerPair.substring(index + 2);
+
+			headers = A3($elm$core$Dict$update, key, function(oldValue) {
+				return $elm$core$Maybe$Just($elm$core$Maybe$isJust(oldValue)
+					? value + ', ' + oldValue.a
+					: value
+				);
+			}, headers);
+		}
+	}
+	return headers;
+}
+
+
+// EXPECT
+
+var _Http_expect = F3(function(type, toBody, toValue)
+{
+	return {
+		$: 0,
+		d: type,
+		b: toBody,
+		a: toValue
+	};
+});
+
+var _Http_mapExpect = F2(function(func, expect)
+{
+	return {
+		$: 0,
+		d: expect.d,
+		b: expect.b,
+		a: function(x) { return func(expect.a(x)); }
+	};
+});
+
+function _Http_toDataView(arrayBuffer)
+{
+	return new DataView(arrayBuffer);
+}
+
+
+// BODY and PARTS
+
+var _Http_emptyBody = { $: 0 };
+var _Http_pair = F2(function(a, b) { return { $: 0, a: a, b: b }; });
+
+function _Http_toFormData(parts)
+{
+	for (var formData = new FormData(); parts.b; parts = parts.b) // WHILE_CONS
+	{
+		var part = parts.a;
+		formData.append(part.a, part.b);
+	}
+	return formData;
+}
+
+var _Http_bytesToBlob = F2(function(mime, bytes)
+{
+	return new Blob([bytes], { type: mime });
+});
+
+
+// PROGRESS
+
+function _Http_track(router, xhr, tracker)
+{
+	// TODO check out lengthComputable on loadstart event
+
+	xhr.upload.addEventListener('progress', function(event) {
+		if (xhr.c) { return; }
+		_Scheduler_rawSpawn(A2($elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, $elm$http$Http$Sending({
+			sent: event.loaded,
+			size: event.total
+		}))));
+	});
+	xhr.addEventListener('progress', function(event) {
+		if (xhr.c) { return; }
+		_Scheduler_rawSpawn(A2($elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, $elm$http$Http$Receiving({
+			received: event.loaded,
+			size: event.lengthComputable ? $elm$core$Maybe$Just(event.total) : $elm$core$Maybe$Nothing
+		}))));
+	});
 }var $author$project$Main$LinkClicked = function (a) {
 	return {$: 'LinkClicked', a: a};
 };
@@ -5168,9 +5342,12 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$application = _Browser_application;
-var $author$project$Main$Model = F3(
-	function (key, url, navbarState) {
-		return {key: key, navbarState: navbarState, url: url};
+var $author$project$Main$Home = function (a) {
+	return {$: 'Home', a: a};
+};
+var $author$project$Main$Model = F4(
+	function (key, url, navbarState, page) {
+		return {key: key, navbarState: navbarState, page: page, url: url};
 	});
 var $author$project$Main$NavbarMsg = function (a) {
 	return {$: 'NavbarMsg', a: a};
@@ -5220,7 +5397,13 @@ var $author$project$Main$init = F3(
 		var navbarState = _v1.a;
 		var navbarCmd = _v1.b;
 		return _Utils_Tuple2(
-			A3($author$project$Main$Model, key, url, navbarState),
+			A4(
+				$author$project$Main$Model,
+				key,
+				url,
+				navbarState,
+				$author$project$Main$Home(
+					{})),
 			navbarCmd);
 	});
 var $elm$core$Platform$Sub$batch = _Platform_batch;
@@ -5228,162 +5411,8 @@ var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$none;
 };
-var $elm$browser$Browser$Navigation$load = _Browser_load;
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
-var $elm$url$Url$addPort = F2(
-	function (maybePort, starter) {
-		if (maybePort.$ === 'Nothing') {
-			return starter;
-		} else {
-			var port_ = maybePort.a;
-			return starter + (':' + $elm$core$String$fromInt(port_));
-		}
-	});
-var $elm$url$Url$addPrefixed = F3(
-	function (prefix, maybeSegment, starter) {
-		if (maybeSegment.$ === 'Nothing') {
-			return starter;
-		} else {
-			var segment = maybeSegment.a;
-			return _Utils_ap(
-				starter,
-				_Utils_ap(prefix, segment));
-		}
-	});
-var $elm$url$Url$toString = function (url) {
-	var http = function () {
-		var _v0 = url.protocol;
-		if (_v0.$ === 'Http') {
-			return 'http://';
-		} else {
-			return 'https://';
-		}
-	}();
-	return A3(
-		$elm$url$Url$addPrefixed,
-		'#',
-		url.fragment,
-		A3(
-			$elm$url$Url$addPrefixed,
-			'?',
-			url.query,
-			_Utils_ap(
-				A2(
-					$elm$url$Url$addPort,
-					url.port_,
-					_Utils_ap(http, url.host)),
-				url.path)));
-};
-var $author$project$Main$update = F2(
-	function (msg, model) {
-		switch (msg.$) {
-			case 'LinkClicked':
-				var urlRequest = msg.a;
-				if (urlRequest.$ === 'Internal') {
-					var url = urlRequest.a;
-					return _Utils_Tuple2(
-						model,
-						A2(
-							$elm$browser$Browser$Navigation$pushUrl,
-							model.key,
-							$elm$url$Url$toString(url)));
-				} else {
-					var href = urlRequest.a;
-					return _Utils_Tuple2(
-						model,
-						$elm$browser$Browser$Navigation$load(href));
-				}
-			case 'UrlChanged':
-				var url = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{url: url}),
-					$elm$core$Platform$Cmd$none);
-			default:
-				var state = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{navbarState: state}),
-					$elm$core$Platform$Cmd$none);
-		}
-	});
-var $author$project$Route$Home = {$: 'Home'};
-var $author$project$Route$Other = {$: 'Other'};
-var $rundis$elm_bootstrap$Bootstrap$Navbar$Brand = function (a) {
-	return {$: 'Brand', a: a};
-};
-var $elm$html$Html$a = _VirtualDom_node('a');
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
-var $rundis$elm_bootstrap$Bootstrap$Navbar$Config = function (a) {
-	return {$: 'Config', a: a};
-};
-var $rundis$elm_bootstrap$Bootstrap$Navbar$updateConfig = F2(
-	function (mapper, _v0) {
-		var conf = _v0.a;
-		return $rundis$elm_bootstrap$Bootstrap$Navbar$Config(
-			mapper(conf));
-	});
-var $rundis$elm_bootstrap$Bootstrap$Navbar$brand = F3(
-	function (attributes, children, config_) {
-		return A2(
-			$rundis$elm_bootstrap$Bootstrap$Navbar$updateConfig,
-			function (conf) {
-				return _Utils_update(
-					conf,
-					{
-						brand: $elm$core$Maybe$Just(
-							$rundis$elm_bootstrap$Bootstrap$Navbar$Brand(
-								A2(
-									$elm$html$Html$a,
-									_Utils_ap(
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('navbar-brand')
-											]),
-										attributes),
-									children)))
-					});
-			},
-			config_);
-	});
-var $rundis$elm_bootstrap$Bootstrap$Internal$Role$Light = {$: 'Light'};
-var $rundis$elm_bootstrap$Bootstrap$Navbar$Light = {$: 'Light'};
-var $rundis$elm_bootstrap$Bootstrap$Navbar$Roled = function (a) {
-	return {$: 'Roled', a: a};
-};
-var $rundis$elm_bootstrap$Bootstrap$General$Internal$XS = {$: 'XS'};
-var $rundis$elm_bootstrap$Bootstrap$Navbar$config = function (toMsg) {
-	return $rundis$elm_bootstrap$Bootstrap$Navbar$Config(
-		{
-			brand: $elm$core$Maybe$Nothing,
-			customItems: _List_Nil,
-			items: _List_Nil,
-			options: {
-				attributes: _List_Nil,
-				fix: $elm$core$Maybe$Nothing,
-				isContainer: false,
-				scheme: $elm$core$Maybe$Just(
-					{
-						bgColor: $rundis$elm_bootstrap$Bootstrap$Navbar$Roled($rundis$elm_bootstrap$Bootstrap$Internal$Role$Light),
-						modifier: $rundis$elm_bootstrap$Bootstrap$Navbar$Light
-					}),
-				toggleAt: $rundis$elm_bootstrap$Bootstrap$General$Internal$XS
-			},
-			toMsg: toMsg,
-			withAnimation: false
-		});
+var $author$project$Main$Shop = function (a) {
+	return {$: 'Shop', a: a};
 };
 var $elm$url$Url$Parser$State = F5(
 	function (visited, unvisited, params, frag, value) {
@@ -6017,6 +6046,10 @@ var $elm$url$Url$Parser$parse = F2(
 					url.fragment,
 					$elm$core$Basics$identity)));
 	});
+var $author$project$Route$AboutUsRoute = {$: 'AboutUsRoute'};
+var $author$project$Route$ContactRoute = {$: 'ContactRoute'};
+var $author$project$Route$HomeRoute = {$: 'HomeRoute'};
+var $author$project$Route$ShopRoute = {$: 'ShopRoute'};
 var $elm$url$Url$Parser$Parser = function (a) {
 	return {$: 'Parser', a: a};
 };
@@ -6114,11 +6147,23 @@ var $elm$url$Url$Parser$top = $elm$url$Url$Parser$Parser(
 var $author$project$Route$parser = $elm$url$Url$Parser$oneOf(
 	_List_fromArray(
 		[
-			A2($elm$url$Url$Parser$map, $author$project$Route$Other, $elm$url$Url$Parser$top),
+			A2($elm$url$Url$Parser$map, $author$project$Route$HomeRoute, $elm$url$Url$Parser$top),
 			A2(
 			$elm$url$Url$Parser$map,
-			$author$project$Route$Home,
-			$elm$url$Url$Parser$s('home'))
+			$author$project$Route$HomeRoute,
+			$elm$url$Url$Parser$s('home')),
+			A2(
+			$elm$url$Url$Parser$map,
+			$author$project$Route$ContactRoute,
+			$elm$url$Url$Parser$s('contact')),
+			A2(
+			$elm$url$Url$Parser$map,
+			$author$project$Route$ShopRoute,
+			$elm$url$Url$Parser$s('shop')),
+			A2(
+			$elm$url$Url$Parser$map,
+			$author$project$Route$AboutUsRoute,
+			$elm$url$Url$Parser$s('about-us'))
 		]));
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
@@ -6140,59 +6185,789 @@ var $author$project$Route$fromUrl = function (url) {
 				path: A2($elm$core$Maybe$withDefault, '', url.fragment)
 			}));
 };
-var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Pages$Home$view = {
-	content: A2(
-		$elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				$elm$html$Html$text('hello')
-			])),
-	title: 'WebShop'
+var $author$project$Main$GetProduct = function (a) {
+	return {$: 'GetProduct', a: a};
 };
-var $author$project$Main$getPageContent = function (route) {
-	if (route.$ === 'Just') {
-		if (route.a.$ === 'Home') {
-			var _v1 = route.a;
-			return $author$project$Pages$Home$view.content;
-		} else {
-			var _v2 = route.a;
-			return A2($elm$html$Html$div, _List_Nil, _List_Nil);
-		}
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $elm$http$Http$BadStatus_ = F2(
+	function (a, b) {
+		return {$: 'BadStatus_', a: a, b: b};
+	});
+var $elm$http$Http$BadUrl_ = function (a) {
+	return {$: 'BadUrl_', a: a};
+};
+var $elm$http$Http$GoodStatus_ = F2(
+	function (a, b) {
+		return {$: 'GoodStatus_', a: a, b: b};
+	});
+var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
+var $elm$http$Http$Receiving = function (a) {
+	return {$: 'Receiving', a: a};
+};
+var $elm$http$Http$Sending = function (a) {
+	return {$: 'Sending', a: a};
+};
+var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
+var $elm$core$Maybe$isJust = function (maybe) {
+	if (maybe.$ === 'Just') {
+		return true;
 	} else {
-		return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+		return false;
 	}
 };
-var $elm$html$Html$Attributes$href = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'href',
-		_VirtualDom_noJavaScriptUri(url));
-};
-var $rundis$elm_bootstrap$Bootstrap$Navbar$Item = function (a) {
-	return {$: 'Item', a: a};
-};
-var $rundis$elm_bootstrap$Bootstrap$Navbar$itemLink = F2(
-	function (attributes, children) {
-		return $rundis$elm_bootstrap$Bootstrap$Navbar$Item(
-			{attributes: attributes, children: children});
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
 	});
-var $rundis$elm_bootstrap$Bootstrap$Navbar$items = F2(
-	function (items_, config_) {
+var $elm$http$Http$expectStringResponse = F2(
+	function (toMsg, toResult) {
+		return A3(
+			_Http_expect,
+			'',
+			$elm$core$Basics$identity,
+			A2($elm$core$Basics$composeR, toResult, toMsg));
+	});
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
+var $elm$http$Http$BadBody = function (a) {
+	return {$: 'BadBody', a: a};
+};
+var $elm$http$Http$BadStatus = function (a) {
+	return {$: 'BadStatus', a: a};
+};
+var $elm$http$Http$BadUrl = function (a) {
+	return {$: 'BadUrl', a: a};
+};
+var $elm$http$Http$NetworkError = {$: 'NetworkError'};
+var $elm$http$Http$Timeout = {$: 'Timeout'};
+var $elm$http$Http$resolve = F2(
+	function (toResult, response) {
+		switch (response.$) {
+			case 'BadUrl_':
+				var url = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadUrl(url));
+			case 'Timeout_':
+				return $elm$core$Result$Err($elm$http$Http$Timeout);
+			case 'NetworkError_':
+				return $elm$core$Result$Err($elm$http$Http$NetworkError);
+			case 'BadStatus_':
+				var metadata = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadStatus(metadata.statusCode));
+			default:
+				var body = response.b;
+				return A2(
+					$elm$core$Result$mapError,
+					$elm$http$Http$BadBody,
+					toResult(body));
+		}
+	});
+var $elm$http$Http$expectJson = F2(
+	function (toMsg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			toMsg,
+			$elm$http$Http$resolve(
+				function (string) {
+					return A2(
+						$elm$core$Result$mapError,
+						$elm$json$Json$Decode$errorToString,
+						A2($elm$json$Json$Decode$decodeString, decoder, string));
+				}));
+	});
+var $elm$http$Http$emptyBody = _Http_emptyBody;
+var $elm$http$Http$Request = function (a) {
+	return {$: 'Request', a: a};
+};
+var $elm$http$Http$State = F2(
+	function (reqs, subs) {
+		return {reqs: reqs, subs: subs};
+	});
+var $elm$http$Http$init = $elm$core$Task$succeed(
+	A2($elm$http$Http$State, $elm$core$Dict$empty, _List_Nil));
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$core$Process$spawn = _Scheduler_spawn;
+var $elm$http$Http$updateReqs = F3(
+	function (router, cmds, reqs) {
+		updateReqs:
+		while (true) {
+			if (!cmds.b) {
+				return $elm$core$Task$succeed(reqs);
+			} else {
+				var cmd = cmds.a;
+				var otherCmds = cmds.b;
+				if (cmd.$ === 'Cancel') {
+					var tracker = cmd.a;
+					var _v2 = A2($elm$core$Dict$get, tracker, reqs);
+					if (_v2.$ === 'Nothing') {
+						var $temp$router = router,
+							$temp$cmds = otherCmds,
+							$temp$reqs = reqs;
+						router = $temp$router;
+						cmds = $temp$cmds;
+						reqs = $temp$reqs;
+						continue updateReqs;
+					} else {
+						var pid = _v2.a;
+						return A2(
+							$elm$core$Task$andThen,
+							function (_v3) {
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A2($elm$core$Dict$remove, tracker, reqs));
+							},
+							$elm$core$Process$kill(pid));
+					}
+				} else {
+					var req = cmd.a;
+					return A2(
+						$elm$core$Task$andThen,
+						function (pid) {
+							var _v4 = req.tracker;
+							if (_v4.$ === 'Nothing') {
+								return A3($elm$http$Http$updateReqs, router, otherCmds, reqs);
+							} else {
+								var tracker = _v4.a;
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A3($elm$core$Dict$insert, tracker, pid, reqs));
+							}
+						},
+						$elm$core$Process$spawn(
+							A3(
+								_Http_toTask,
+								router,
+								$elm$core$Platform$sendToApp(router),
+								req)));
+				}
+			}
+		}
+	});
+var $elm$http$Http$onEffects = F4(
+	function (router, cmds, subs, state) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (reqs) {
+				return $elm$core$Task$succeed(
+					A2($elm$http$Http$State, reqs, subs));
+			},
+			A3($elm$http$Http$updateReqs, router, cmds, state.reqs));
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$http$Http$maybeSend = F4(
+	function (router, desiredTracker, progress, _v0) {
+		var actualTracker = _v0.a;
+		var toMsg = _v0.b;
+		return _Utils_eq(desiredTracker, actualTracker) ? $elm$core$Maybe$Just(
+			A2(
+				$elm$core$Platform$sendToApp,
+				router,
+				toMsg(progress))) : $elm$core$Maybe$Nothing;
+	});
+var $elm$http$Http$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var tracker = _v0.a;
+		var progress = _v0.b;
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$filterMap,
+					A3($elm$http$Http$maybeSend, router, tracker, progress),
+					state.subs)));
+	});
+var $elm$http$Http$Cancel = function (a) {
+	return {$: 'Cancel', a: a};
+};
+var $elm$http$Http$cmdMap = F2(
+	function (func, cmd) {
+		if (cmd.$ === 'Cancel') {
+			var tracker = cmd.a;
+			return $elm$http$Http$Cancel(tracker);
+		} else {
+			var r = cmd.a;
+			return $elm$http$Http$Request(
+				{
+					allowCookiesFromOtherDomains: r.allowCookiesFromOtherDomains,
+					body: r.body,
+					expect: A2(_Http_mapExpect, func, r.expect),
+					headers: r.headers,
+					method: r.method,
+					timeout: r.timeout,
+					tracker: r.tracker,
+					url: r.url
+				});
+		}
+	});
+var $elm$http$Http$MySub = F2(
+	function (a, b) {
+		return {$: 'MySub', a: a, b: b};
+	});
+var $elm$http$Http$subMap = F2(
+	function (func, _v0) {
+		var tracker = _v0.a;
+		var toMsg = _v0.b;
+		return A2(
+			$elm$http$Http$MySub,
+			tracker,
+			A2($elm$core$Basics$composeR, toMsg, func));
+	});
+_Platform_effectManagers['Http'] = _Platform_createManager($elm$http$Http$init, $elm$http$Http$onEffects, $elm$http$Http$onSelfMsg, $elm$http$Http$cmdMap, $elm$http$Http$subMap);
+var $elm$http$Http$command = _Platform_leaf('Http');
+var $elm$http$Http$subscription = _Platform_leaf('Http');
+var $elm$http$Http$request = function (r) {
+	return $elm$http$Http$command(
+		$elm$http$Http$Request(
+			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
+};
+var $elm$http$Http$get = function (r) {
+	return $elm$http$Http$request(
+		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
+};
+var $author$project$Models$Product$Product = F8(
+	function (id, itemCode, name, height, price, inStock, pictures, mainPicture) {
+		return {height: height, id: id, inStock: inStock, itemCode: itemCode, mainPicture: mainPicture, name: name, pictures: pictures, price: price};
+	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $elm$json$Json$Decode$map8 = _Json_map8;
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$productDecoder = $elm$json$Json$Decode$list(
+	A9(
+		$elm$json$Json$Decode$map8,
+		$author$project$Models$Product$Product,
+		A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int),
+		A2($elm$json$Json$Decode$field, 'itemCode', $elm$json$Json$Decode$string),
+		A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+		A2($elm$json$Json$Decode$field, 'height', $elm$json$Json$Decode$int),
+		A2($elm$json$Json$Decode$field, 'price', $elm$json$Json$Decode$int),
+		A2($elm$json$Json$Decode$field, 'inStock', $elm$json$Json$Decode$int),
+		A2(
+			$elm$json$Json$Decode$field,
+			'pictures',
+			$elm$json$Json$Decode$list($elm$json$Json$Decode$string)),
+		A2($elm$json$Json$Decode$field, 'mainPicture', $elm$json$Json$Decode$string)));
+var $author$project$Main$getAllProducts = $elm$http$Http$get(
+	{
+		expect: A2($elm$http$Http$expectJson, $author$project$Main$GetProduct, $author$project$Main$productDecoder),
+		url: 'http://localhost:8080/api/items'
+	});
+var $author$project$Main$getShopModel = function (list) {
+	return {products: list};
+};
+var $elm$browser$Browser$Navigation$load = _Browser_load;
+var $elm$core$Debug$log = _Debug_log;
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
+var $author$project$Main$GetShop = {$: 'GetShop'};
+var $author$project$Main$GotHomePage = function (a) {
+	return {$: 'GotHomePage', a: a};
+};
+var $author$project$Main$GotShopPage = function (a) {
+	return {$: 'GotShopPage', a: a};
+};
+var $author$project$Pages$Home$LoadHome = {$: 'LoadHome'};
+var $author$project$Main$Other = {$: 'Other'};
+var $author$project$Main$sendPageMsg = function (route) {
+	if (route.$ === 'Just') {
+		switch (route.a.$) {
+			case 'HomeRoute':
+				var _v1 = route.a;
+				return $author$project$Main$GotHomePage($author$project$Pages$Home$LoadHome);
+			case 'ShopRoute':
+				var _v2 = route.a;
+				return $author$project$Main$GotShopPage($author$project$Main$GetShop);
+			case 'ContactRoute':
+				var _v3 = route.a;
+				return $author$project$Main$Other;
+			default:
+				var _v4 = route.a;
+				return $author$project$Main$Other;
+		}
+	} else {
+		return $author$project$Main$Other;
+	}
+};
+var $author$project$Main$shopInit = {products: _List_Nil};
+var $elm$url$Url$addPort = F2(
+	function (maybePort, starter) {
+		if (maybePort.$ === 'Nothing') {
+			return starter;
+		} else {
+			var port_ = maybePort.a;
+			return starter + (':' + $elm$core$String$fromInt(port_));
+		}
+	});
+var $elm$url$Url$addPrefixed = F3(
+	function (prefix, maybeSegment, starter) {
+		if (maybeSegment.$ === 'Nothing') {
+			return starter;
+		} else {
+			var segment = maybeSegment.a;
+			return _Utils_ap(
+				starter,
+				_Utils_ap(prefix, segment));
+		}
+	});
+var $elm$url$Url$toString = function (url) {
+	var http = function () {
+		var _v0 = url.protocol;
+		if (_v0.$ === 'Http') {
+			return 'http://';
+		} else {
+			return 'https://';
+		}
+	}();
+	return A3(
+		$elm$url$Url$addPrefixed,
+		'#',
+		url.fragment,
+		A3(
+			$elm$url$Url$addPrefixed,
+			'?',
+			url.query,
+			_Utils_ap(
+				A2(
+					$elm$url$Url$addPort,
+					url.port_,
+					_Utils_ap(http, url.host)),
+				url.path)));
+};
+var $author$project$Main$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'LinkClicked':
+				var urlRequest = msg.a;
+				if (urlRequest.$ === 'Internal') {
+					var url = urlRequest.a;
+					var _v2 = $author$project$Main$sendPageMsg(
+						$author$project$Route$fromUrl(url));
+					return _Utils_Tuple2(
+						model,
+						A2(
+							$elm$browser$Browser$Navigation$pushUrl,
+							model.key,
+							$elm$url$Url$toString(url)));
+				} else {
+					var href = urlRequest.a;
+					return _Utils_Tuple2(
+						model,
+						$elm$browser$Browser$Navigation$load(href));
+				}
+			case 'UrlChanged':
+				var url = msg.a;
+				var _v3 = function () {
+					var _v4 = $author$project$Main$sendPageMsg(
+						$author$project$Route$fromUrl(url));
+					switch (_v4.$) {
+						case 'GotHomePage':
+							return _Utils_Tuple2(
+								$author$project$Main$Home(
+									{}),
+								$elm$core$Platform$Cmd$none);
+						case 'GotShopPage':
+							var content = _v4.a;
+							var _v5 = A2($elm$core$Debug$log, 'string', 'gotShopPage');
+							return _Utils_Tuple2(
+								$author$project$Main$Shop($author$project$Main$shopInit),
+								$author$project$Main$getAllProducts);
+						default:
+							return _Utils_Tuple2(
+								$author$project$Main$Home(
+									{}),
+								$elm$core$Platform$Cmd$none);
+					}
+				}();
+				var page = _v3.a;
+				var callback = _v3.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{page: page, url: url}),
+					callback);
+			case 'NavbarMsg':
+				var state = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{navbarState: state}),
+					$elm$core$Platform$Cmd$none);
+			case 'GetProduct':
+				var result = msg.a;
+				if (result.$ === 'Ok') {
+					var list = result.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								page: $author$project$Main$Shop(
+									$author$project$Main$getShopModel(list))
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		}
+	});
+var $rundis$elm_bootstrap$Bootstrap$Navbar$Brand = function (a) {
+	return {$: 'Brand', a: a};
+};
+var $elm$html$Html$a = _VirtualDom_node('a');
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $rundis$elm_bootstrap$Bootstrap$Navbar$Config = function (a) {
+	return {$: 'Config', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Navbar$updateConfig = F2(
+	function (mapper, _v0) {
+		var conf = _v0.a;
+		return $rundis$elm_bootstrap$Bootstrap$Navbar$Config(
+			mapper(conf));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Navbar$brand = F3(
+	function (attributes, children, config_) {
 		return A2(
 			$rundis$elm_bootstrap$Bootstrap$Navbar$updateConfig,
 			function (conf) {
 				return _Utils_update(
 					conf,
-					{items: items_});
+					{
+						brand: $elm$core$Maybe$Just(
+							$rundis$elm_bootstrap$Bootstrap$Navbar$Brand(
+								A2(
+									$elm$html$Html$a,
+									_Utils_ap(
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('navbar-brand')
+											]),
+										attributes),
+									children)))
+					});
 			},
 			config_);
 	});
+var $elm$html$Html$div = _VirtualDom_node('div');
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$applyModifier = F2(
+	function (option, options) {
+		switch (option.$) {
+			case 'Aligned':
+				var align = option.a;
+				return _Utils_update(
+					options,
+					{
+						aligned: $elm$core$Maybe$Just(align)
+					});
+			case 'Coloring':
+				var coloring = option.a;
+				return _Utils_update(
+					options,
+					{
+						coloring: $elm$core$Maybe$Just(coloring)
+					});
+			case 'TextColoring':
+				var coloring = option.a;
+				return _Utils_update(
+					options,
+					{
+						textColoring: $elm$core$Maybe$Just(coloring)
+					});
+			default:
+				var attrs = option.a;
+				return _Utils_update(
+					options,
+					{
+						attributes: _Utils_ap(options.attributes, attrs)
+					});
+		}
+	});
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$defaultOptions = {aligned: $elm$core$Maybe$Nothing, attributes: _List_Nil, coloring: $elm$core$Maybe$Nothing, textColoring: $elm$core$Maybe$Nothing};
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $rundis$elm_bootstrap$Bootstrap$General$Internal$screenSizeOption = function (size) {
+	switch (size.$) {
+		case 'XS':
+			return $elm$core$Maybe$Nothing;
+		case 'SM':
+			return $elm$core$Maybe$Just('sm');
+		case 'MD':
+			return $elm$core$Maybe$Just('md');
+		case 'LG':
+			return $elm$core$Maybe$Just('lg');
+		default:
+			return $elm$core$Maybe$Just('xl');
+	}
+};
+var $rundis$elm_bootstrap$Bootstrap$Internal$Text$textAlignDirOption = function (dir) {
+	switch (dir.$) {
+		case 'Center':
+			return 'center';
+		case 'Left':
+			return 'left';
+		default:
+			return 'right';
+	}
+};
+var $rundis$elm_bootstrap$Bootstrap$Internal$Text$textAlignClass = function (_v0) {
+	var dir = _v0.dir;
+	var size = _v0.size;
+	return $elm$html$Html$Attributes$class(
+		'text' + (A2(
+			$elm$core$Maybe$withDefault,
+			'-',
+			A2(
+				$elm$core$Maybe$map,
+				function (s) {
+					return '-' + (s + '-');
+				},
+				$rundis$elm_bootstrap$Bootstrap$General$Internal$screenSizeOption(size))) + $rundis$elm_bootstrap$Bootstrap$Internal$Text$textAlignDirOption(dir)));
+};
+var $rundis$elm_bootstrap$Bootstrap$Internal$Role$toClass = F2(
+	function (prefix, role) {
+		return $elm$html$Html$Attributes$class(
+			prefix + ('-' + function () {
+				switch (role.$) {
+					case 'Primary':
+						return 'primary';
+					case 'Secondary':
+						return 'secondary';
+					case 'Success':
+						return 'success';
+					case 'Info':
+						return 'info';
+					case 'Warning':
+						return 'warning';
+					case 'Danger':
+						return 'danger';
+					case 'Light':
+						return 'light';
+					default:
+						return 'dark';
+				}
+			}()));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Internal$Text$textColorClass = function (color) {
+	if (color.$ === 'White') {
+		return $elm$html$Html$Attributes$class('text-white');
+	} else {
+		var role = color.a;
+		return A2($rundis$elm_bootstrap$Bootstrap$Internal$Role$toClass, 'text', role);
+	}
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$cardAttributes = function (modifiers) {
+	var options = A3($elm$core$List$foldl, $rundis$elm_bootstrap$Bootstrap$Card$Internal$applyModifier, $rundis$elm_bootstrap$Bootstrap$Card$Internal$defaultOptions, modifiers);
+	return _Utils_ap(
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('card')
+			]),
+		_Utils_ap(
+			function () {
+				var _v0 = options.coloring;
+				if (_v0.$ === 'Just') {
+					if (_v0.a.$ === 'Roled') {
+						var role = _v0.a.a;
+						return _List_fromArray(
+							[
+								A2($rundis$elm_bootstrap$Bootstrap$Internal$Role$toClass, 'bg', role)
+							]);
+					} else {
+						var role = _v0.a.a;
+						return _List_fromArray(
+							[
+								A2($rundis$elm_bootstrap$Bootstrap$Internal$Role$toClass, 'border', role)
+							]);
+					}
+				} else {
+					return _List_Nil;
+				}
+			}(),
+			_Utils_ap(
+				function () {
+					var _v1 = options.textColoring;
+					if (_v1.$ === 'Just') {
+						var color = _v1.a;
+						return _List_fromArray(
+							[
+								$rundis$elm_bootstrap$Bootstrap$Internal$Text$textColorClass(color)
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}(),
+				_Utils_ap(
+					function () {
+						var _v2 = options.aligned;
+						if (_v2.$ === 'Just') {
+							var align = _v2.a;
+							return _List_fromArray(
+								[
+									$rundis$elm_bootstrap$Bootstrap$Internal$Text$textAlignClass(align)
+								]);
+						} else {
+							return _List_Nil;
+						}
+					}(),
+					options.attributes))));
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$renderBlocks = function (blocks) {
+	return A2(
+		$elm$core$List$map,
+		function (block_) {
+			if (block_.$ === 'CardBlock') {
+				var e = block_.a;
+				return e;
+			} else {
+				var e = block_.a;
+				return e;
+			}
+		},
+		blocks);
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$view = function (_v0) {
+	var conf = _v0.a;
+	return A2(
+		$elm$html$Html$div,
+		$rundis$elm_bootstrap$Bootstrap$Card$Internal$cardAttributes(conf.options),
+		_Utils_ap(
+			A2(
+				$elm$core$List$filterMap,
+				$elm$core$Basics$identity,
+				_List_fromArray(
+					[
+						A2(
+						$elm$core$Maybe$map,
+						function (_v1) {
+							var e = _v1.a;
+							return e;
+						},
+						conf.header),
+						A2(
+						$elm$core$Maybe$map,
+						function (_v2) {
+							var e = _v2.a;
+							return e;
+						},
+						conf.imgTop)
+					])),
+			_Utils_ap(
+				$rundis$elm_bootstrap$Bootstrap$Card$Internal$renderBlocks(conf.blocks),
+				A2(
+					$elm$core$List$filterMap,
+					$elm$core$Basics$identity,
+					_List_fromArray(
+						[
+							A2(
+							$elm$core$Maybe$map,
+							function (_v3) {
+								var e = _v3.a;
+								return e;
+							},
+							conf.footer),
+							A2(
+							$elm$core$Maybe$map,
+							function (_v4) {
+								var e = _v4.a;
+								return e;
+							},
+							conf.imgBottom)
+						])))));
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$columns = function (cards) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('card-columns')
+			]),
+		A2($elm$core$List$map, $rundis$elm_bootstrap$Bootstrap$Card$view, cards));
+};
+var $rundis$elm_bootstrap$Bootstrap$Internal$Role$Light = {$: 'Light'};
+var $rundis$elm_bootstrap$Bootstrap$Navbar$Light = {$: 'Light'};
+var $rundis$elm_bootstrap$Bootstrap$Navbar$Roled = function (a) {
+	return {$: 'Roled', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$General$Internal$XS = {$: 'XS'};
+var $rundis$elm_bootstrap$Bootstrap$Navbar$config = function (toMsg) {
+	return $rundis$elm_bootstrap$Bootstrap$Navbar$Config(
+		{
+			brand: $elm$core$Maybe$Nothing,
+			customItems: _List_Nil,
+			items: _List_Nil,
+			options: {
+				attributes: _List_Nil,
+				fix: $elm$core$Maybe$Nothing,
+				isContainer: false,
+				scheme: $elm$core$Maybe$Just(
+					{
+						bgColor: $rundis$elm_bootstrap$Bootstrap$Navbar$Roled($rundis$elm_bootstrap$Bootstrap$Internal$Role$Light),
+						modifier: $rundis$elm_bootstrap$Bootstrap$Navbar$Light
+					}),
+				toggleAt: $rundis$elm_bootstrap$Bootstrap$General$Internal$XS
+			},
+			toMsg: toMsg,
+			withAnimation: false
+		});
+};
+var $rundis$elm_bootstrap$Bootstrap$Navbar$Custom = function (a) {
+	return {$: 'Custom', a: a};
+};
 var $rundis$elm_bootstrap$Bootstrap$Navbar$Dark = {$: 'Dark'};
-var $rundis$elm_bootstrap$Bootstrap$Internal$Role$Success = {$: 'Success'};
 var $rundis$elm_bootstrap$Bootstrap$Navbar$updateOptions = F2(
 	function (mapper, _v0) {
 		var conf = _v0.a;
@@ -6217,24 +6992,511 @@ var $rundis$elm_bootstrap$Bootstrap$Navbar$scheme = F3(
 			},
 			conf);
 	});
-var $rundis$elm_bootstrap$Bootstrap$Navbar$success = A2(
-	$rundis$elm_bootstrap$Bootstrap$Navbar$scheme,
-	$rundis$elm_bootstrap$Bootstrap$Navbar$Dark,
-	$rundis$elm_bootstrap$Bootstrap$Navbar$Roled($rundis$elm_bootstrap$Bootstrap$Internal$Role$Success));
-var $elm$html$Html$li = _VirtualDom_node('li');
+var $rundis$elm_bootstrap$Bootstrap$Navbar$darkCustom = function (color) {
+	return A2(
+		$rundis$elm_bootstrap$Bootstrap$Navbar$scheme,
+		$rundis$elm_bootstrap$Bootstrap$Navbar$Dark,
+		$rundis$elm_bootstrap$Bootstrap$Navbar$Custom(color));
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$Attrs = function (a) {
+	return {$: 'Attrs', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$attrs = function (attrs_) {
+	return $rundis$elm_bootstrap$Bootstrap$Card$Internal$Attrs(attrs_);
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$Config = function (a) {
+	return {$: 'Config', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$CardBlock = function (a) {
+	return {$: 'CardBlock', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$applyBlockModifier = F2(
+	function (option, options) {
+		switch (option.$) {
+			case 'AlignedBlock':
+				var align = option.a;
+				return _Utils_update(
+					options,
+					{
+						aligned: $elm$core$Maybe$Just(align)
+					});
+			case 'BlockColoring':
+				var role = option.a;
+				return _Utils_update(
+					options,
+					{
+						coloring: $elm$core$Maybe$Just(role)
+					});
+			case 'BlockTextColoring':
+				var color = option.a;
+				return _Utils_update(
+					options,
+					{
+						textColoring: $elm$core$Maybe$Just(color)
+					});
+			default:
+				var attrs = option.a;
+				return _Utils_update(
+					options,
+					{
+						attributes: _Utils_ap(options.attributes, attrs)
+					});
+		}
+	});
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$defaultBlockOptions = {aligned: $elm$core$Maybe$Nothing, attributes: _List_Nil, coloring: $elm$core$Maybe$Nothing, textColoring: $elm$core$Maybe$Nothing};
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$blockAttributes = function (modifiers) {
+	var options = A3($elm$core$List$foldl, $rundis$elm_bootstrap$Bootstrap$Card$Internal$applyBlockModifier, $rundis$elm_bootstrap$Bootstrap$Card$Internal$defaultBlockOptions, modifiers);
+	return _Utils_ap(
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('card-body')
+			]),
+		_Utils_ap(
+			function () {
+				var _v0 = options.aligned;
+				if (_v0.$ === 'Just') {
+					var align = _v0.a;
+					return _List_fromArray(
+						[
+							$rundis$elm_bootstrap$Bootstrap$Internal$Text$textAlignClass(align)
+						]);
+				} else {
+					return _List_Nil;
+				}
+			}(),
+			_Utils_ap(
+				function () {
+					var _v1 = options.coloring;
+					if (_v1.$ === 'Just') {
+						var role = _v1.a;
+						return _List_fromArray(
+							[
+								A2($rundis$elm_bootstrap$Bootstrap$Internal$Role$toClass, 'bg', role)
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}(),
+				_Utils_ap(
+					function () {
+						var _v2 = options.textColoring;
+						if (_v2.$ === 'Just') {
+							var color = _v2.a;
+							return _List_fromArray(
+								[
+									$rundis$elm_bootstrap$Bootstrap$Internal$Text$textColorClass(color)
+								]);
+						} else {
+							return _List_Nil;
+						}
+					}(),
+					options.attributes))));
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$block = F2(
+	function (options, items) {
+		return $rundis$elm_bootstrap$Bootstrap$Card$Internal$CardBlock(
+			A2(
+				$elm$html$Html$div,
+				$rundis$elm_bootstrap$Bootstrap$Card$Internal$blockAttributes(options),
+				A2(
+					$elm$core$List$map,
+					function (_v0) {
+						var e = _v0.a;
+						return e;
+					},
+					items)));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Card$block = F3(
+	function (options, items, _v0) {
+		var conf = _v0.a;
+		return $rundis$elm_bootstrap$Bootstrap$Card$Config(
+			_Utils_update(
+				conf,
+				{
+					blocks: _Utils_ap(
+						conf.blocks,
+						_List_fromArray(
+							[
+								A2($rundis$elm_bootstrap$Bootstrap$Card$Internal$block, options, items)
+							]))
+				}));
+	});
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $rundis$elm_bootstrap$Bootstrap$Internal$Button$applyModifier = F2(
+	function (modifier, options) {
+		switch (modifier.$) {
+			case 'Size':
+				var size = modifier.a;
+				return _Utils_update(
+					options,
+					{
+						size: $elm$core$Maybe$Just(size)
+					});
+			case 'Coloring':
+				var coloring = modifier.a;
+				return _Utils_update(
+					options,
+					{
+						coloring: $elm$core$Maybe$Just(coloring)
+					});
+			case 'Block':
+				return _Utils_update(
+					options,
+					{block: true});
+			case 'Disabled':
+				var val = modifier.a;
+				return _Utils_update(
+					options,
+					{disabled: val});
+			default:
+				var attrs = modifier.a;
+				return _Utils_update(
+					options,
+					{
+						attributes: _Utils_ap(options.attributes, attrs)
+					});
+		}
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
+var $elm$html$Html$Attributes$classList = function (classes) {
+	return $elm$html$Html$Attributes$class(
+		A2(
+			$elm$core$String$join,
+			' ',
+			A2(
+				$elm$core$List$map,
+				$elm$core$Tuple$first,
+				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
+};
+var $rundis$elm_bootstrap$Bootstrap$Internal$Button$defaultOptions = {attributes: _List_Nil, block: false, coloring: $elm$core$Maybe$Nothing, disabled: false, size: $elm$core$Maybe$Nothing};
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
+var $rundis$elm_bootstrap$Bootstrap$Internal$Button$roleClass = function (role) {
+	switch (role.$) {
+		case 'Primary':
+			return 'primary';
+		case 'Secondary':
+			return 'secondary';
+		case 'Success':
+			return 'success';
+		case 'Info':
+			return 'info';
+		case 'Warning':
+			return 'warning';
+		case 'Danger':
+			return 'danger';
+		case 'Dark':
+			return 'dark';
+		case 'Light':
+			return 'light';
+		default:
+			return 'link';
+	}
+};
+var $rundis$elm_bootstrap$Bootstrap$Internal$Button$buttonAttributes = function (modifiers) {
+	var options = A3($elm$core$List$foldl, $rundis$elm_bootstrap$Bootstrap$Internal$Button$applyModifier, $rundis$elm_bootstrap$Bootstrap$Internal$Button$defaultOptions, modifiers);
+	return _Utils_ap(
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$classList(
+				_List_fromArray(
+					[
+						_Utils_Tuple2('btn', true),
+						_Utils_Tuple2('btn-block', options.block),
+						_Utils_Tuple2('disabled', options.disabled)
+					])),
+				$elm$html$Html$Attributes$disabled(options.disabled)
+			]),
+		_Utils_ap(
+			function () {
+				var _v0 = A2($elm$core$Maybe$andThen, $rundis$elm_bootstrap$Bootstrap$General$Internal$screenSizeOption, options.size);
+				if (_v0.$ === 'Just') {
+					var s = _v0.a;
+					return _List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('btn-' + s)
+						]);
+				} else {
+					return _List_Nil;
+				}
+			}(),
+			_Utils_ap(
+				function () {
+					var _v1 = options.coloring;
+					if (_v1.$ === 'Just') {
+						if (_v1.a.$ === 'Roled') {
+							var role = _v1.a.a;
+							return _List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(
+									'btn-' + $rundis$elm_bootstrap$Bootstrap$Internal$Button$roleClass(role))
+								]);
+						} else {
+							var role = _v1.a.a;
+							return _List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(
+									'btn-outline-' + $rundis$elm_bootstrap$Bootstrap$Internal$Button$roleClass(role))
+								]);
+						}
+					} else {
+						return _List_Nil;
+					}
+				}(),
+				options.attributes)));
+};
+var $rundis$elm_bootstrap$Bootstrap$Button$button = F2(
+	function (options, children) {
+		return A2(
+			$elm$html$Html$button,
+			$rundis$elm_bootstrap$Bootstrap$Internal$Button$buttonAttributes(options),
+			children);
+	});
+var $rundis$elm_bootstrap$Bootstrap$Card$config = function (options) {
+	return $rundis$elm_bootstrap$Bootstrap$Card$Config(
+		{blocks: _List_Nil, footer: $elm$core$Maybe$Nothing, header: $elm$core$Maybe$Nothing, imgBottom: $elm$core$Maybe$Nothing, imgTop: $elm$core$Maybe$Nothing, options: options});
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$Internal$BlockItem = function (a) {
+	return {$: 'BlockItem', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$Block$custom = function (element) {
+	return $rundis$elm_bootstrap$Bootstrap$Card$Internal$BlockItem(element);
+};
+var $elm$html$Html$h3 = _VirtualDom_node('h3');
+var $rundis$elm_bootstrap$Bootstrap$Card$Header = function (a) {
+	return {$: 'Header', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Card$headerPrivate = F4(
+	function (elemFn, attributes, children, _v0) {
+		var conf = _v0.a;
+		return $rundis$elm_bootstrap$Bootstrap$Card$Config(
+			_Utils_update(
+				conf,
+				{
+					header: $elm$core$Maybe$Just(
+						$rundis$elm_bootstrap$Bootstrap$Card$Header(
+							A2(
+								elemFn,
+								A2(
+									$elm$core$List$cons,
+									$elm$html$Html$Attributes$class('card-header'),
+									attributes),
+								children)))
+				}));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Card$header = $rundis$elm_bootstrap$Bootstrap$Card$headerPrivate($elm$html$Html$div);
+var $elm$html$Html$img = _VirtualDom_node('img');
+var $rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mt2 = $elm$html$Html$Attributes$class('mt-2');
+var $rundis$elm_bootstrap$Bootstrap$Internal$Button$Coloring = function (a) {
+	return {$: 'Coloring', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Internal$Button$Primary = {$: 'Primary'};
+var $rundis$elm_bootstrap$Bootstrap$Internal$Button$Roled = function (a) {
+	return {$: 'Roled', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Button$primary = $rundis$elm_bootstrap$Bootstrap$Internal$Button$Coloring(
+	$rundis$elm_bootstrap$Bootstrap$Internal$Button$Roled($rundis$elm_bootstrap$Bootstrap$Internal$Button$Primary));
+var $elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $rundis$elm_bootstrap$Bootstrap$Card$Block$text = F2(
+	function (attributes, children) {
+		return $rundis$elm_bootstrap$Bootstrap$Card$Internal$BlockItem(
+			A2(
+				$elm$html$Html$p,
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-text')
+						]),
+					attributes),
+				children));
+	});
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$html$Html$h4 = _VirtualDom_node('h4');
+var $rundis$elm_bootstrap$Bootstrap$Card$Block$title = F3(
+	function (elemFn, attributes, children) {
+		return $rundis$elm_bootstrap$Bootstrap$Card$Internal$BlockItem(
+			A2(
+				elemFn,
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$class('card-title'),
+					attributes),
+				children));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Card$Block$titleH4 = $rundis$elm_bootstrap$Bootstrap$Card$Block$title($elm$html$Html$h4);
+var $author$project$Main$getProductView = function (product) {
+	return A3(
+		$rundis$elm_bootstrap$Bootstrap$Card$block,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$rundis$elm_bootstrap$Bootstrap$Card$Block$titleH4,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Zavesa')
+					])),
+				A2(
+				$rundis$elm_bootstrap$Bootstrap$Card$Block$text,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						'Cena: ' + ($elm$core$String$fromInt(product.price) + ',00rsd'))
+					])),
+				$rundis$elm_bootstrap$Bootstrap$Card$Block$custom(
+				A2(
+					$rundis$elm_bootstrap$Bootstrap$Button$button,
+					_List_fromArray(
+						[$rundis$elm_bootstrap$Bootstrap$Button$primary]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Kupi')
+						])))
+			]),
+		A3(
+			$rundis$elm_bootstrap$Bootstrap$Card$header,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('text-center')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$img,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$src(product.mainPicture),
+							A2($elm$html$Html$Attributes$style, 'width', '280px')
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$h3,
+					_List_fromArray(
+						[$rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mt2]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(product.name)
+						]))
+				]),
+			$rundis$elm_bootstrap$Bootstrap$Card$config(
+				_List_fromArray(
+					[
+						$rundis$elm_bootstrap$Bootstrap$Card$attrs(
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'width', '20rem')
+							]))
+					]))));
+};
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
+var $rundis$elm_bootstrap$Bootstrap$Navbar$items = F2(
+	function (items_, config_) {
+		return A2(
+			$rundis$elm_bootstrap$Bootstrap$Navbar$updateConfig,
+			function (conf) {
+				return _Utils_update(
+					conf,
+					{items: items_});
+			},
+			config_);
+	});
+var $avh4$elm_color$Color$RgbaSpace = F4(
+	function (a, b, c, d) {
+		return {$: 'RgbaSpace', a: a, b: b, c: c, d: d};
+	});
+var $avh4$elm_color$Color$scaleFrom255 = function (c) {
+	return c / 255;
+};
+var $avh4$elm_color$Color$rgb255 = F3(
+	function (r, g, b) {
+		return A4(
+			$avh4$elm_color$Color$RgbaSpace,
+			$avh4$elm_color$Color$scaleFrom255(r),
+			$avh4$elm_color$Color$scaleFrom255(g),
+			$avh4$elm_color$Color$scaleFrom255(b),
+			1.0);
+	});
+var $rundis$elm_bootstrap$Bootstrap$Navbar$Item = function (a) {
+	return {$: 'Item', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Navbar$itemLink = F2(
+	function (attributes, children) {
+		return $rundis$elm_bootstrap$Bootstrap$Navbar$Item(
+			{attributes: attributes, children: children});
+	});
 var $author$project$Route$routeToName = function (route) {
-	if (route.$ === 'Home') {
-		return 'Home';
-	} else {
-		return 'Nothing';
+	switch (route.$) {
+		case 'HomeRoute':
+			return 'Početna';
+		case 'ShopRoute':
+			return 'Prodavnica';
+		case 'ContactRoute':
+			return 'Kontakt';
+		default:
+			return 'Istorija';
 	}
 };
 var $author$project$Route$routeToPieces = function (page) {
-	if (page.$ === 'Home') {
-		return _List_fromArray(
-			['home']);
-	} else {
-		return _List_Nil;
+	switch (page.$) {
+		case 'HomeRoute':
+			return _List_fromArray(
+				['home']);
+		case 'ShopRoute':
+			return _List_fromArray(
+				['shop']);
+		case 'ContactRoute':
+			return _List_fromArray(
+				['contact']);
+		default:
+			return _List_fromArray(
+				['about-us']);
 	}
 };
 var $author$project$Route$routeToString = function (page) {
@@ -6245,36 +7507,21 @@ var $author$project$Route$routeToString = function (page) {
 };
 var $author$project$Route$toListHref = function (targetRoute) {
 	return A2(
-		$elm$html$Html$li,
-		_List_Nil,
+		$rundis$elm_bootstrap$Bootstrap$Navbar$itemLink,
 		_List_fromArray(
 			[
-				A2(
-				$elm$html$Html$a,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$href(
-						$author$project$Route$routeToString(targetRoute))
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						$author$project$Route$routeToName(targetRoute))
-					]))
+				$elm$html$Html$Attributes$href(
+				$author$project$Route$routeToString(targetRoute)),
+				A2($elm$html$Html$Attributes$style, 'line-height', '80px'),
+				A2($elm$html$Html$Attributes$style, 'font-size', 'large'),
+				A2($elm$html$Html$Attributes$style, 'margin-right', '10px')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(
+				$author$project$Route$routeToName(targetRoute))
 			]));
 };
-var $elm$html$Html$ul = _VirtualDom_node('ul');
-var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $rundis$elm_bootstrap$Bootstrap$Navbar$maybeBrand = function (brand_) {
 	if (brand_.$ === 'Just') {
 		var b = brand_.a.a;
@@ -6333,8 +7580,6 @@ var $rundis$elm_bootstrap$Bootstrap$Navbar$shouldHideMenu = F2(
 			$rundis$elm_bootstrap$Bootstrap$Navbar$sizeToComparable(winMedia),
 			$rundis$elm_bootstrap$Bootstrap$Navbar$sizeToComparable(options.toggleAt)) > 0;
 	});
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $rundis$elm_bootstrap$Bootstrap$Navbar$AnimatingDown = {$: 'AnimatingDown'};
 var $rundis$elm_bootstrap$Bootstrap$Navbar$AnimatingUp = {$: 'AnimatingUp'};
 var $rundis$elm_bootstrap$Bootstrap$Navbar$Shown = {$: 'Shown'};
@@ -6516,45 +7761,6 @@ var $rundis$elm_bootstrap$Bootstrap$Navbar$menuWrapperAttributes = F2(
 		}
 	});
 var $elm$html$Html$nav = _VirtualDom_node('nav');
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
-};
-var $elm$html$Html$Attributes$classList = function (classes) {
-	return $elm$html$Html$Attributes$class(
-		A2(
-			$elm$core$String$join,
-			' ',
-			A2(
-				$elm$core$List$map,
-				$elm$core$Tuple$first,
-				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
-};
-var $rundis$elm_bootstrap$Bootstrap$General$Internal$screenSizeOption = function (size) {
-	switch (size.$) {
-		case 'XS':
-			return $elm$core$Maybe$Nothing;
-		case 'SM':
-			return $elm$core$Maybe$Just('sm');
-		case 'MD':
-			return $elm$core$Maybe$Just('md');
-		case 'LG':
-			return $elm$core$Maybe$Just('lg');
-		default:
-			return $elm$core$Maybe$Just('xl');
-	}
-};
 var $rundis$elm_bootstrap$Bootstrap$Navbar$expandOption = function (size) {
 	var toClass = function (sz) {
 		return $elm$html$Html$Attributes$class(
@@ -6600,30 +7806,6 @@ var $rundis$elm_bootstrap$Bootstrap$Navbar$fixOption = function (fix) {
 		return 'fixed-bottom';
 	}
 };
-var $rundis$elm_bootstrap$Bootstrap$Internal$Role$toClass = F2(
-	function (prefix, role) {
-		return $elm$html$Html$Attributes$class(
-			prefix + ('-' + function () {
-				switch (role.$) {
-					case 'Primary':
-						return 'primary';
-					case 'Secondary':
-						return 'secondary';
-					case 'Success':
-						return 'success';
-					case 'Info':
-						return 'info';
-					case 'Warning':
-						return 'warning';
-					case 'Danger':
-						return 'danger';
-					case 'Light':
-						return 'light';
-					default:
-						return 'dark';
-				}
-			}()));
-	});
 var $elm$core$String$concat = function (strings) {
 	return A2($elm$core$String$join, '', strings);
 };
@@ -6749,6 +7931,7 @@ var $rundis$elm_bootstrap$Bootstrap$Navbar$getOrInitDropdownStatus = F2(
 			$rundis$elm_bootstrap$Bootstrap$Navbar$Closed,
 			A2($elm$core$Dict$get, id, dropdowns));
 	});
+var $elm$html$Html$li = _VirtualDom_node('li');
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$virtual_dom$VirtualDom$Custom = function (a) {
 	return {$: 'Custom', a: a};
@@ -6888,6 +8071,7 @@ var $rundis$elm_bootstrap$Bootstrap$Navbar$renderItemLink = function (_v0) {
 				children)
 			]));
 };
+var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $rundis$elm_bootstrap$Bootstrap$Navbar$renderNav = F3(
 	function (state, configRec, navItems) {
 		return A2(
@@ -6911,7 +8095,6 @@ var $rundis$elm_bootstrap$Bootstrap$Navbar$renderNav = F3(
 	});
 var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$json$Json$Decode$andThen = _Json_andThen;
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
@@ -6923,7 +8106,6 @@ var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$parentElement = function (decoder) {
 	return A2($elm$json$Json$Decode$field, 'parentElement', decoder);
 };
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$target = function (decoder) {
 	return A2($elm$json$Json$Decode$field, 'target', decoder);
 };
@@ -7069,6 +8251,54 @@ var $rundis$elm_bootstrap$Bootstrap$Navbar$view = F2(
 								]))
 						]))));
 	});
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $author$project$Pages$Home$view = function (_v0) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('bg')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row'),
+						A2($elm$html$Html$Attributes$style, 'padding-top', '10%')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col-4 m-3')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col-7')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$h1,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'color', 'white')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Savršen izbor za Vaš dom!')
+									]))
+							]))
+					]))
+			]));
+};
 var $rundis$elm_bootstrap$Bootstrap$Navbar$withAnimation = function (config_) {
 	return A2(
 		$rundis$elm_bootstrap$Bootstrap$Navbar$updateConfig,
@@ -7090,50 +8320,74 @@ var $author$project$Main$view = function (model) {
 					$rundis$elm_bootstrap$Bootstrap$Navbar$items,
 					_List_fromArray(
 						[
-							A2(
-							$rundis$elm_bootstrap$Bootstrap$Navbar$itemLink,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$href('#')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Item 1')
-								])),
-							A2(
-							$rundis$elm_bootstrap$Bootstrap$Navbar$itemLink,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$href('#')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Item 2')
-								]))
+							$author$project$Route$toListHref($author$project$Route$HomeRoute),
+							$author$project$Route$toListHref($author$project$Route$AboutUsRoute),
+							$author$project$Route$toListHref($author$project$Route$ShopRoute),
+							$author$project$Route$toListHref($author$project$Route$ContactRoute)
 						]),
 					A3(
 						$rundis$elm_bootstrap$Bootstrap$Navbar$brand,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$href('#')
+								$elm$html$Html$Attributes$href('#'),
+								A2($elm$html$Html$Attributes$style, 'padding-left', '10%'),
+								A2($elm$html$Html$Attributes$style, 'padding-right', '50%')
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Brand')
+								A2(
+								$elm$html$Html$img,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$src('../assets/LogoBiana.png'),
+										$elm$html$Html$Attributes$class('d-inline-block align-top'),
+										A2($elm$html$Html$Attributes$style, 'height', '90px')
+									]),
+								_List_Nil)
 							]),
-						$rundis$elm_bootstrap$Bootstrap$Navbar$success(
+						A2(
+							$rundis$elm_bootstrap$Bootstrap$Navbar$darkCustom,
+							A3($avh4$elm_color$Color$rgb255, 24, 28, 36),
 							$rundis$elm_bootstrap$Bootstrap$Navbar$withAnimation(
 								$rundis$elm_bootstrap$Bootstrap$Navbar$config($author$project$Main$NavbarMsg)))))),
-				$author$project$Main$getPageContent(
-				$author$project$Route$fromUrl(model.url)),
-				A2(
-				$elm$html$Html$ul,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$author$project$Route$toListHref($author$project$Route$Home),
-						$author$project$Route$toListHref($author$project$Route$Other)
-					]))
+				function () {
+				var _v0 = model.page;
+				if (_v0.$ === 'Home') {
+					var home = _v0.a;
+					return $author$project$Pages$Home$view(home);
+				} else {
+					var shop = _v0.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'padding-left', '30%'),
+								A2($elm$html$Html$Attributes$style, 'padding-top', '2%')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$h2,
+										_List_fromArray(
+											[
+												A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+												A2($elm$html$Html$Attributes$style, 'text-decoration', 'underline')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Zavese')
+											]))
+									])),
+								$rundis$elm_bootstrap$Bootstrap$Card$columns(
+								A2($elm$core$List$map, $author$project$Main$getProductView, shop.products))
+							]));
+				}
+			}()
 			]),
 		title: 'URL Interceptor'
 	};

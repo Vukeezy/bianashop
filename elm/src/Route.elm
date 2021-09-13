@@ -3,27 +3,35 @@ module Route exposing (Route(..), fromUrl, replaceUrl, toListHref)
 import Browser.Navigation as Nav
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), Parser, oneOf, s)
-import Html exposing (Html)
-import Html exposing (li)
-import Html exposing (a)
 import Html exposing (text)
 import Html.Attributes exposing (href)
+import Bootstrap.Navbar exposing (Item)
+import Bootstrap.Navbar as Navbar
+import Html.Attributes exposing (style)
+
 
 
 
 -- ROUTING
 
 
-type Route
-    = Home | Other
+type Route = 
+    HomeRoute 
+    | ShopRoute
+    | ContactRoute
+    | AboutUsRoute
+
 
 
 
 parser : Parser (Route -> a) a
 parser =
     oneOf
-        [ Parser.map Other Parser.top
-        , Parser.map Home (s "home")
+        [ Parser.map HomeRoute Parser.top
+        , Parser.map HomeRoute (s "home")
+        , Parser.map ContactRoute (s "contact")
+        , Parser.map ShopRoute (s "shop")
+        , Parser.map AboutUsRoute (s "about-us")
         ]
 
 
@@ -31,10 +39,11 @@ parser =
 -- PUBLIC HELPERS
 
 
-toListHref : Route -> Html msg
+toListHref : Route -> Item msg
 toListHref targetRoute =
-    li [] [ a [ href (routeToString targetRoute) ] [ text (routeToName targetRoute) ] ]
-
+    Navbar.itemLink [ href (routeToString targetRoute), style "line-height" "80px", style "font-size" "large", style "margin-right" "10px" ]
+                     [ text (routeToName targetRoute) ]
+        
 
 
 replaceUrl : Nav.Key -> Route -> Cmd msg
@@ -63,17 +72,30 @@ routeToString page =
 routeToName : Route -> String
 routeToName route =
     case route of 
-        Home ->
-            "Home"
+        HomeRoute ->
+            "Početna"
         
-        Other ->
-            "Nothing"
+        ShopRoute ->
+            "Prodavnica"
+
+        ContactRoute ->
+            "Kontakt"
+
+        AboutUsRoute -> 
+            "Istorija"
 
 routeToPieces : Route -> List String
 routeToPieces page =
     case page of
-        Home ->
+        HomeRoute ->
             ["home"]
 
-        Other ->
-            []
+        ShopRoute ->
+            ["shop"]
+
+        ContactRoute -> 
+            ["contact"]
+        
+
+        AboutUsRoute -> 
+            ["about-us"]
