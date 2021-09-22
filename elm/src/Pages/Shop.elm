@@ -1,7 +1,6 @@
 module Pages.Shop exposing (..)
 import Html exposing (..)
-import Json.Decode exposing (Decoder, field, int, string)
-import Debug exposing (toString)
+import Json.Decode exposing (Decoder, string)
 import Http exposing (..)
 import Models.Product as Product
 

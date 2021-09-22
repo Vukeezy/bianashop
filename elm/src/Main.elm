@@ -17,7 +17,7 @@ import Color
 import Pages.Home as Home
 import Models.Product as Product
 import Http
-import Json.Decode exposing (Decoder, field, int, string)
+import Json.Decode exposing (Decoder, string)
 
 
 -- MAIN
@@ -119,10 +119,6 @@ update msg model =
               (Home {}, Cmd.none)
 
           GotShopPage content ->
-              let
-                  _ = Debug.log "string" "gotShopPage"
-              in
-              
               (Shop (shopInit), getAllProducts)
 
           Other ->
