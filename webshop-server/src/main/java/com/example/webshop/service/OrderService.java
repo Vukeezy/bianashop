@@ -1,10 +1,10 @@
 package com.example.webshop.service;
 
+import com.example.webshop.exceptions.CreateOrderFailException;
+import com.example.webshop.exceptions.ItemNotFoundException;
 import com.example.webshop.model.*;
-import com.example.webshop.model.dto.CartItemDTO;
 import com.example.webshop.model.enums.OrderStatus;
 import com.example.webshop.repository.OrderRepository;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +28,6 @@ public class OrderService {
     @Autowired
     OrderedItemService orderedItemService;
 
-
     public List<Order> getAll() {
         return orderRepository.findAll();
     }
@@ -39,7 +38,7 @@ public class OrderService {
         for (CartItem cartItem: toEntity.getCartItemList()) {
             Item found = itemService.findById(cartItem.getId());
             if (found == null) {
-                return null;
+                throw new ItemNotFoundException();
             }
             foundItems.add(found);
         }
@@ -55,8 +54,12 @@ public class OrderService {
         }
 
         Order newOrder = new Order(toEntity.getFullName(), toEntity.getAddress(), toEntity.getEmail(), toEntity.isDelievery(), toEntity.getPhoneNumber(), orderedItems, OrderStatus.SENT);
-        newOrder = orderRepository.save(newOrder);
-        return newOrder;
+
+        try {
+            return orderRepository.save(newOrder);
+        } catch (Exception e) {
+            throw new CreateOrderFailException();
+        }
 
     }
 }

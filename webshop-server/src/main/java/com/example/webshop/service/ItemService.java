@@ -1,5 +1,6 @@
 package com.example.webshop.service;
 
+import com.example.webshop.exceptions.*;
 import com.example.webshop.model.*;
 import com.example.webshop.repository.ItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,35 +22,51 @@ public class ItemService {
     }
 
     public Item findById(int item) {
-        return itemRepository.findById(item);
+        Item found = itemRepository.findById(item);
+        if (found == null) {
+            throw new ItemNotFoundException();
+        }
+        return found;
     }
 
     public Item update(Item foundItem) {
-        Set<Picture> pictures = new HashSet<>();
-        for(Picture picture : foundItem.getPictures()) {
-            Picture foundPicture = pictureService.getByPicture(picture.getPicture());
-            if (foundPicture == null) {
-                pictures.add(picture);
-            } else {
-                pictures.add(foundPicture);
-            }
+
+        manageItemPictures(foundItem);
+
+        try {
+            return itemRepository.save(foundItem);
+        } catch (Exception e) {
+            throw new UpdateItemFailException();
         }
-        Picture mainPic = pictureService.getByPicture(foundItem.getMainPicture().getPicture());
-        if (mainPic != null) {
-            foundItem.setMainPicture(mainPic);
-        }
-        foundItem.setPictures(pictures);
-        return itemRepository.save(foundItem);
     }
 
     public Item create(Item toEntity) {
         Item found = itemRepository.findByItemCodeOrName(toEntity.getItemCode(), toEntity.getName());
         if (found != null) {
-            return null;
+            if (found.getItemCode().equalsIgnoreCase(toEntity.getItemCode()) &&
+                    !found.getName().equalsIgnoreCase(toEntity.getName())) {
+                throw new ItemUniqueCodeException();
+            } else if (!found.getItemCode().equalsIgnoreCase(toEntity.getItemCode()) &&
+                    found.getName().equalsIgnoreCase(toEntity.getName())) {
+                throw new ItemUniqueNameException();
+            } else {
+                throw new ItemUniqueCodeAndNameException();
+            }
         }
 
+        manageItemPictures(toEntity);
+
+        try {
+            return itemRepository.save(toEntity);
+        } catch (Exception e) {
+            throw new CreateItemFailException();
+        }
+    }
+
+    private void manageItemPictures(Item item) {
+
         Set<Picture> pictures = new HashSet<>();
-        for(Picture picture : toEntity.getPictures()) {
+        for(Picture picture : item.getPictures()) {
             Picture foundPicture = pictureService.getByPicture(picture.getPicture());
             if (foundPicture == null) {
                 pictures.add(picture);
@@ -57,18 +74,20 @@ public class ItemService {
                 pictures.add(foundPicture);
             }
         }
-        Picture mainPic = pictureService.getByPicture(toEntity.getMainPicture().getPicture());
+        Picture mainPic = pictureService.getByPicture(item.getMainPicture().getPicture());
         if (mainPic != null) {
-            toEntity.setMainPicture(mainPic);
+            item.setMainPicture(mainPic);
         }
 
-        toEntity.setPictures(pictures);
-
-        return itemRepository.save(toEntity);
+        item.setPictures(pictures);
     }
 
     public Item findBySaleId(int saleId) {
-        return itemRepository.findBySaleId(saleId);
+        Item found = itemRepository.findBySaleId(saleId);
+        if (found == null) {
+            throw new ItemNotFoundException();
+        }
+        return found;
     }
 
     public List<Item> sort(SortParams sortParams, List<Item> items) {
@@ -84,15 +103,16 @@ public class ItemService {
         } else if (sortParams.getParam().equalsIgnoreCase("instock")) {
             return sortByInStock(sortParams.getType(), items);
         }
-        return null;
-
+        throw new NoSortParamsException();
     }
 
     private List<Item> sortByInStock(String type, List<Item> items) {
         if (type.equalsIgnoreCase("asc")) {
             items.sort(Comparator.comparingInt(Item::getInStock));
-        } else {
+        } else if (type.equalsIgnoreCase("desc")) {
             items.sort((a,b)-> b.getInStock() - a.getInStock());
+        } else {
+            throw new InvalidSortTypeException();
         }
         return items;
     }
@@ -100,8 +120,10 @@ public class ItemService {
     private List<Item> sortByPrice(String type, List<Item> items) {
         if (type.equalsIgnoreCase("asc")) {
             items.sort((a,b)-> (int) (a.getPrice() - (b.getPrice())));
-        } else {
+        } else if (type.equalsIgnoreCase("desc")) {
             items.sort((a,b)->(int) (b.getPrice() - (a.getPrice())));
+        } else {
+            throw new InvalidSortTypeException();
         }
         return items;
     }
@@ -109,8 +131,10 @@ public class ItemService {
     private List<Item> sortByHeight(String type, List<Item> items) {
         if (type.equalsIgnoreCase("asc")) {
             items.sort((a,b)-> (int) (a.getHeight() - (b.getHeight())));
-        } else {
+        } else if (type.equalsIgnoreCase("desc")) {
             items.sort((a,b)->(int) (b.getHeight() - (a.getHeight())));
+        } else {
+            throw new InvalidSortTypeException();
         }
         return items;
     }
@@ -118,8 +142,10 @@ public class ItemService {
     private List<Item> sortByName(String type, List<Item> items) {
         if (type.equalsIgnoreCase("asc")) {
             items.sort(Comparator.comparing(Item::getName));
-        } else {
+        } else if (type.equalsIgnoreCase("desc")) {
             items.sort((a,b)->b.getName().compareTo(a.getName()));
+        } else {
+            throw new InvalidSortTypeException();
         }
         return items;
     }
@@ -127,18 +153,24 @@ public class ItemService {
     private List<Item> sortByItemCode(String type, List<Item> items) {
         if (type.equalsIgnoreCase("asc")) {
             items.sort(Comparator.comparing(Item::getItemCode));
-        } else {
+        } else if (type.equalsIgnoreCase("desc")) {
             items.sort((a,b)->b.getItemCode().compareTo(a.getItemCode()));
+        } else {
+            throw new InvalidSortTypeException();
         }
         return items;
     }
 
     public List<Item> search(SearchParams searchParams) {
-        return itemRepository.findByItemCodeOrNameContainsIgnoreCase(searchParams.getInput(), searchParams.getInput());
+        try {
+            return itemRepository.findByItemCodeOrNameContainsIgnoreCase(searchParams.getInput(), searchParams.getInput());
+        } catch (Exception e) {
+            throw new SearchingWentWrongException();
+        }
     }
 
     public List<Item> filter(FilterParams filterParams, List<Item> items) {
-        List<Item> result = new ArrayList<Item>();
+        List<Item> result = new ArrayList<>();
         for(Item item:items) {
 
             boolean filteredByHeightFrom = false;

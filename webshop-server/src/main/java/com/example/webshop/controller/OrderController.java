@@ -39,7 +39,7 @@ public class OrderController {
     UserMapper userMapper;
 
     @RequestMapping(method = RequestMethod.GET)
-    @PreAuthorize("hasRole('ROLE_ADMINISTRATOR')")
+    // @PreAuthorize("hasRole('ROLE_ADMINISTRATOR')")
     public ResponseEntity<List<OrderDTO>> getAllOrders() {
         List<Order> result = orderService.getAll();
         return new ResponseEntity<>(orderMapper.toDTOList(result), HttpStatus.OK);
@@ -48,9 +48,6 @@ public class OrderController {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<OrderDTO> makeOrder(@RequestBody CartDTO cartDTO) {
         Order result = orderService.create(cartMapper.toEntity(cartDTO));
-        if (result == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
         return new ResponseEntity<>(orderMapper.toDTO(result), HttpStatus.OK);
     }
 }

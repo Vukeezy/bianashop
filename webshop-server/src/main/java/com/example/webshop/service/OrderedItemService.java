@@ -1,14 +1,11 @@
 package com.example.webshop.service;
 
+import com.example.webshop.exceptions.CreateOrderedItemFailException;
 import com.example.webshop.model.OrderedItem;
 import com.example.webshop.model.Picture;
 import com.example.webshop.repository.OrderedItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 @Service
 public class OrderedItemService {
@@ -26,7 +23,10 @@ public class OrderedItemService {
             orderedItem.setPicture(foundPicture);
         }
 
-
-        return orderedItemRepository.save(orderedItem);
+        try {
+            return orderedItemRepository.save(orderedItem);
+        } catch (Exception e) {
+            throw new CreateOrderedItemFailException();
+        }
     }
 }

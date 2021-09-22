@@ -11,7 +11,6 @@ public class PictureService {
     @Autowired
     PictureRepository pictureRepository;
 
-
     public Picture getByPicture(String picture) {
         return pictureRepository.findByPicture(picture);
     }

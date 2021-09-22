@@ -22,24 +22,16 @@ public class SaleController {
     SaleMapper saleMapper;
 
     @RequestMapping(method = RequestMethod.POST)
-    @PreAuthorize("hasRole('ROLE_ADMINISTRATOR')")
+    // @PreAuthorize("hasRole('ROLE_ADMINISTRATOR')")
     public ResponseEntity<SaleDTO> createSale(@RequestBody SaleDTO saleDTO) {
         Sale result = saleService.create(saleMapper.toEntity(saleDTO), saleDTO.getItem());
-
-        if(result == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
         return new ResponseEntity<>(saleMapper.toDTO(result), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/{saleId}", method = RequestMethod.DELETE)
-    @PreAuthorize("hasRole('ROLE_ADMINISTRATOR')")
-    public ResponseEntity deleteSale(@PathVariable int saleId) {
-        boolean result = saleService.delete(saleId);
-
-        if(!result) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    // @PreAuthorize("hasRole('ROLE_ADMINISTRATOR')")
+    public ResponseEntity<?> deleteSale(@PathVariable int saleId) {
+        saleService.delete(saleId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

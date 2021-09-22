@@ -1,5 +1,6 @@
 package com.example.webshop.service;
 
+import com.example.webshop.exceptions.*;
 import com.example.webshop.model.Item;
 import com.example.webshop.model.Sale;
 import com.example.webshop.repository.SaleRepository;
@@ -20,43 +21,44 @@ public class SaleService {
         Item foundItem = itemService.findById(item);
 
         if (foundItem == null) {
-            return null;
+            throw new ItemNotFoundException();
         }
 
-        Sale created = saleRepository.save(toEntity);
+        try {
+            Sale created = saleRepository.save(toEntity);
 
-        if (foundItem.getSale() != null) {
-            Sale toDelete = foundItem.getSale();
-            foundItem.setSale(created);
-            Item updated = itemService.update(foundItem);
-            if(updated == null) {
-                return null;
+            if (foundItem.getSale() != null) {
+                Sale toDelete = foundItem.getSale();
+                foundItem.setSale(created);
+                itemService.update(foundItem);
+                saleRepository.delete(toDelete);
+
+            } else {
+                foundItem.setSale(created);
+                itemService.update(foundItem);
             }
 
-            saleRepository.delete(toDelete);
-
-        } else {
-            foundItem.setSale(created);
-            Item updated = itemService.update(foundItem);
-            if(updated == null) {
-                return null;
-            }
+            return created;
+        } catch (Exception e) {
+            throw new CreateSaleFailException();
         }
-
-        return created;
 
     }
 
     public boolean delete(int saleId) {
         Sale found = saleRepository.findById(saleId);
         if (found == null) {
-            return false;
+            throw new SaleNotFoundException();
         }
 
         Item findBySale = itemService.findBySaleId(saleId);
         findBySale.setSale(null);
         itemService.update(findBySale);
-        saleRepository.delete(found);
-        return true;
+        try {
+            saleRepository.delete(found);
+            return true;
+        } catch (Exception e) {
+            throw new DeleteSaleFailException();
+        }
     }
 }

@@ -40,21 +40,15 @@ public class ItemController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    @PreAuthorize("hasRole('ROLE_ADMINISTRATOR')")
+    // @PreAuthorize("hasRole('ROLE_ADMINISTRATOR')")
     public ResponseEntity<ItemDTO> createNewItem(@RequestBody ItemDTO itemDTO) {
         Item result = itemService.create(itemMapper.toEntity(itemDTO));
-        if (result == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
         return new ResponseEntity<>(itemMapper.toDTO(result), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/sort", method = RequestMethod.POST)
     public ResponseEntity<List<ItemDTO>> sortItems(@RequestBody SortParams sortParams) {
         List<Item> result = itemService.sort(sortParams, itemMapper.toEntityList(sortParams.getItems()));
-        if(result == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
         return new ResponseEntity<>(itemMapper.toDTOList(result), HttpStatus.OK);
     }
 
