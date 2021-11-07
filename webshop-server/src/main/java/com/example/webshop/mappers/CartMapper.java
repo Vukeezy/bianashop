@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class CartMapper implements MapperInterface<Cart, CartDTO> {
@@ -15,7 +16,7 @@ public class CartMapper implements MapperInterface<Cart, CartDTO> {
 
     @Override
     public Cart toEntity(CartDTO dto) {
-        return new Cart(dto.getFullName(), dto.getAddress(), dto.isDelievery(), dto.getEmail(), dto.getPhoneNumber(), dto.getFinalPrice(), cartItemMapper.toEntityList(dto.getItems()));
+        return new Cart(dto.getFullName(), dto.getAddress(), dto.isDelivery(), dto.getEmail(), dto.getPhoneNumber(), dto.getFinalPrice(), cartItemMapper.toEntityList(dto.getItems()));
     }
 
     @Override
@@ -30,6 +31,16 @@ public class CartMapper implements MapperInterface<Cart, CartDTO> {
 
     @Override
     public List<CartDTO> toDTOList(List<Cart> entities) {
+        return null;
+    }
+
+    @Override
+    public Set<Cart> toEntitySet(List<CartDTO> dtos) {
+        return null;
+    }
+
+    @Override
+    public List<CartDTO> toDTOList(Set<Cart> entities) {
         return null;
     }
 }

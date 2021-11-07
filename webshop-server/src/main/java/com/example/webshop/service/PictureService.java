@@ -12,6 +12,6 @@ public class PictureService {
     PictureRepository pictureRepository;
 
     public Picture getByPicture(String picture) {
-        return pictureRepository.findByPicture(picture);
+        return pictureRepository.findByPictureCode(picture);
     }
 }

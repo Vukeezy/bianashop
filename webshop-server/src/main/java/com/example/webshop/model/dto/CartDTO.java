@@ -1,7 +1,5 @@
 package com.example.webshop.model.dto;
 
-import com.example.webshop.model.CartItem;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +7,7 @@ public class CartDTO {
 
     private String fullName;
     private String address;
-    private boolean delievery;
+    private boolean delivery;
     private String email;
     private String phoneNumber;
     private List<CartItemDTO> items = new ArrayList<>();
@@ -18,10 +16,10 @@ public class CartDTO {
     public CartDTO() {
     }
 
-    public CartDTO(String fullName, String address, boolean delievery, String email, String phoneNumber, double finalPrice, List<CartItemDTO> cartItemList) {
+    public CartDTO(String fullName, String address, boolean delivery, String email, String phoneNumber, double finalPrice, List<CartItemDTO> cartItemList) {
         this.fullName = fullName;
         this.address = address;
-        this.delievery = delievery;
+        this.delivery = delivery;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.finalPrice = finalPrice;
@@ -68,12 +66,12 @@ public class CartDTO {
         this.email = email;
     }
 
-    public boolean isDelievery() {
-        return delievery;
+    public boolean isDelivery() {
+        return delivery;
     }
 
-    public void setDelievery(boolean delievery) {
-        this.delievery = delievery;
+    public void setDelivery(boolean delivery) {
+        this.delivery = delivery;
     }
 
     public String getPhoneNumber() {

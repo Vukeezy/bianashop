@@ -1,9 +1,9 @@
 package com.example.webshop.model;
 
-import com.example.webshop.model.dto.OrderedItemDTO;
 import com.example.webshop.model.enums.OrderStatus;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,64 +15,60 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "fullName", nullable = false)
+    @Column(name = "fullName")
     private String fullName;
 
-    @Column(name = "address", nullable = false)
+    @Column(name = "address")
     private String address;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email")
     private String email;
 
-    @Column(name = "delievery", nullable = false)
-    private boolean delievery;
-
-    @Column(name = "phoneNumber", nullable = false)
+    @Column(name = "phoneNumber")
     private String phoneNumber;
-
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "orderId")
     private Set<OrderedItem> orderedItems = new HashSet<>();
 
+    @Column(name = "delivery")
+    private boolean delivery;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
-    @Column(name = "finalPrice", nullable = false)
+    @Column(name = "finalPrice")
     private double finalPrice;
+
+    @Column(name = "orderDate")
+    private Date orderDate;
 
     public Order() {
     }
 
-    public Order(String fullName, String address, String email, boolean delievery, String phoneNumber, Set<OrderedItem> orderedItems, OrderStatus status) {
+    public Order(String fullName, String address, String email, String phoneNumber, Set<OrderedItem> orderedItems, boolean delivery, OrderStatus status, double finalPrice, Date orderDate) {
         this.fullName = fullName;
         this.address = address;
         this.email = email;
-        this.delievery = delievery;
         this.phoneNumber = phoneNumber;
         this.orderedItems = orderedItems;
+        this.delivery = delivery;
         this.status = status;
-        this.finalPrice = 0.0;
-        calculateFinalPrice();
+        this.finalPrice = finalPrice;
+        this.orderDate = orderDate;
     }
 
-    public Order(int id,String fullName, String address, String email, boolean delievery, String phoneNumber, Set<OrderedItem> orderedItems, OrderStatus status) {
+    public Order(int id, String fullName, String address, String email, String phoneNumber, Set<OrderedItem> orderedItems, boolean delivery, OrderStatus status, double finalPrice, Date orderDate) {
         this.id = id;
         this.fullName = fullName;
         this.address = address;
         this.email = email;
-        this.delievery = delievery;
         this.phoneNumber = phoneNumber;
         this.orderedItems = orderedItems;
+        this.delivery = delivery;
         this.status = status;
-        this.finalPrice = 0.0;
-        calculateFinalPrice();
-    }
-
-    private void calculateFinalPrice() {
-        for(OrderedItem item: this.orderedItems) {
-            this.finalPrice = this.finalPrice + (item.getAmount() * item.getPrice());
-        }
+        this.finalPrice = finalPrice;
+        this.orderDate = orderDate;
     }
 
     public int getId() {
@@ -81,30 +77,6 @@ public class Order {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public Set<OrderedItem> getOrderedItems() {
-        return orderedItems;
-    }
-
-    public void setOrderedItems(Set<OrderedItem> orderedItems) {
-        this.orderedItems = orderedItems;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(OrderStatus status) {
-        this.status = status;
-    }
-
-    public double getFinalPrice() {
-        return finalPrice;
-    }
-
-    public void setFinalPrice(double finalPrice) {
-        this.finalPrice = finalPrice;
     }
 
     public String getFullName() {
@@ -131,14 +103,6 @@ public class Order {
         this.email = email;
     }
 
-    public boolean isDelievery() {
-        return delievery;
-    }
-
-    public void setDelievery(boolean delievery) {
-        this.delievery = delievery;
-    }
-
     public String getPhoneNumber() {
         return phoneNumber;
     }
@@ -146,4 +110,52 @@ public class Order {
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
+
+    public Set<OrderedItem> getOrderedItems() {
+        return orderedItems;
+    }
+
+    public void setOrderedItems(Set<OrderedItem> orderedItems) {
+        this.orderedItems = orderedItems;
+    }
+
+    public boolean isDelivery() {
+        return delivery;
+    }
+
+    public void setDelivery(boolean delivery) {
+        this.delivery = delivery;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+
+    public double getFinalPrice() {
+        return finalPrice;
+    }
+
+    public void setFinalPrice(double finalPrice) {
+        this.finalPrice = finalPrice;
+    }
+
+    public Date getOrderDate() {
+        return orderDate;
+    }
+
+    public void setOrderDate(Date orderDate) {
+        this.orderDate = orderDate;
+    }
+
+    private void calculateFinalPrice() {
+        for(OrderedItem item: this.orderedItems) {
+            // this.finalPrice = this.finalPrice + (item.getAmount() * item.getPrice());
+        }
+        this.finalPrice = 20.0;
+    }
+
 }
