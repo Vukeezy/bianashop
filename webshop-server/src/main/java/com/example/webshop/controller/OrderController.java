@@ -32,17 +32,7 @@ public class OrderController {
     @Autowired
     CartMapper cartMapper;
 
-    @Autowired
-    CurtainRepository curtainRepository;
-
-    @Autowired
-    CurtainRodRepository curtainRodRepository;
-
-    @Autowired
-    OrderRepository orderRepository;
-
     @RequestMapping(method = RequestMethod.GET)
-    // @PreAuthorize("hasRole('ROLE_ADMINISTRATOR')")
     public ResponseEntity<List<OrderDTO>> getAllOrders() {
         List<Order> result = orderService.getAll();
         return new ResponseEntity<>(null, HttpStatus.OK);
@@ -58,12 +48,5 @@ public class OrderController {
     public ResponseEntity<CartDTO> calculateCartPrice(@RequestBody CartDTO cartDTO) {
         Cart cart = orderService.calculateCartPrice(cartMapper.toEntity(cartDTO));
         return new ResponseEntity<>(cartMapper.toDTO(cart), HttpStatus.OK);
-    }
-
-    @RequestMapping(value = "test", method = RequestMethod.GET)
-    public ResponseEntity<?> test() {
-        curtainRepository.save(new Curtain());
-        curtainRodRepository.save(new CurtainRod());
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
