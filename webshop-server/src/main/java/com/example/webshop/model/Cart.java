@@ -6,7 +6,7 @@ public class Cart {
 
     private String fullName;
     private String address;
-    private boolean delievery;
+    private boolean delivery;
     private String email;
     private String phoneNumber;
     private double finalPrice;
@@ -15,10 +15,10 @@ public class Cart {
     public Cart() {
     }
 
-    public Cart(String fullName, String address, boolean delievery, String email, String phoneNumber, double finalPrice, List<CartItem> cartItemList) {
+    public Cart(String fullName, String address, boolean delivery, String email, String phoneNumber, double finalPrice, List<CartItem> cartItemList) {
         this.fullName = fullName;
         this.address = address;
-        this.delievery = delievery;
+        this.delivery = delivery;
         this.phoneNumber = phoneNumber;
         this.email = email;
         this.finalPrice = finalPrice;
@@ -65,12 +65,12 @@ public class Cart {
         this.email = email;
     }
 
-    public boolean isDelievery() {
-        return delievery;
+    public boolean isDelivery() {
+        return delivery;
     }
 
-    public void setDelievery(boolean delievery) {
-        this.delievery = delievery;
+    public void setDelivery(boolean delivery) {
+        this.delivery = delivery;
     }
 
     public String getPhoneNumber() {

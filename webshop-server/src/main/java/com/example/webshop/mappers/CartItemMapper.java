@@ -6,13 +6,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class CartItemMapper implements MapperInterface<CartItem, CartItemDTO> {
 
     @Override
     public CartItem toEntity(CartItemDTO dto) {
-        return new CartItem(dto.getId(), dto.getAmount());
+        return new CartItem(dto.getId(), dto.getAmount(), dto.getWidth(), dto.getHeight(), dto.getMaskId(), dto.getPrice());
     }
 
     @Override
@@ -31,6 +32,16 @@ public class CartItemMapper implements MapperInterface<CartItem, CartItemDTO> {
 
     @Override
     public List<CartItemDTO> toDTOList(List<CartItem> entities) {
+        return null;
+    }
+
+    @Override
+    public Set<CartItem> toEntitySet(List<CartItemDTO> dtos) {
+        return null;
+    }
+
+    @Override
+    public List<CartItemDTO> toDTOList(Set<CartItem> entities) {
         return null;
     }
 }

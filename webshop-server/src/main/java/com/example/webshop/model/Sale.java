@@ -1,6 +1,7 @@
 package com.example.webshop.model;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name = "sales")
@@ -13,18 +14,11 @@ public class Sale {
     @Column(name = "percent", nullable = false)
     private double percent;
 
-    public Sale() {
-    }
+    @Column(name = "startDate", nullable = false)
+    private Date startDate;
 
-    public Sale(int id, double percent) {
-        this.id = id;
-        this.percent = percent;
-    }
-
-    public Sale(double percent) {
-        this.percent = percent;
-    }
-
+    @Column(name = "endDate", nullable = false)
+    private Date endDate;
 
     public int getId() {
         return id;
